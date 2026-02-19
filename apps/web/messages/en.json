@@ -1,0 +1,66 @@
+{
+  "common": {
+    "appName": "Steam Diploma",
+    "home": "Home",
+    "library": "Library",
+    "favorites": "Favorites",
+    "wishlist": "Wishlist",
+    "recommendations": "Recommendations",
+    "search": "Search",
+    "support": "Support",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "loading": "Loading...",
+    "error": "Error",
+    "noResults": "No results found",
+    "language": "Language"
+  },
+  "home": {
+    "title": "Steam Diploma",
+    "subtitle": "Game Store",
+    "hero": "Discover new games"
+  },
+  "games": {
+    "free": "Free",
+    "buy": "Buy",
+    "addToFavorites": "Add to Favorites",
+    "removeFromFavorites": "Remove from Favorites",
+    "addToWishlist": "Add to Wishlist",
+    "removeFromWishlist": "Remove from Wishlist",
+    "inLibrary": "In Library",
+    "genres": "Genres",
+    "platforms": "Platforms",
+    "developer": "Developer",
+    "publisher": "Publisher",
+    "releaseDate": "Release Date",
+    "description": "Description",
+    "screenshots": "Screenshots",
+    "price": "Price",
+    "discount": "Discount"
+  },
+  "chat": {
+    "placeholder": "Ask about games...",
+    "title": "AI Assistant",
+    "history": "Chat History",
+    "newChat": "New Chat",
+    "thinking": "Thinking..."
+  },
+  "auth": {
+    "signInWith": "Sign in with {provider}",
+    "signInGoogle": "Sign in with Google",
+    "welcomeBack": "Welcome back!"
+  },
+  "support": {
+    "title": "Support",
+    "subtitle": "Need help? Contact us",
+    "telegramButton": "Message on Telegram",
+    "contactUs": "Contact Us"
+  },
+  "recommendations": {
+    "title": "Recommendations",
+    "popular": "Popular Games",
+    "topRated": "Top Rated",
+    "forYou": "For You",
+    "byGenre": "By Genre"
+  }
+}

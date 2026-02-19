@@ -1,0 +1,32 @@
+import { getTranslations } from 'next-intl/server'
+import { getWishlist } from '@/actions/wishlist'
+import { GameGrid } from '@/components/games/game-grid'
+
+export default async function WishlistPage() {
+  const t = await getTranslations('common')
+
+  let games: Array<{
+    appid: number
+    name: string
+    headerImage?: string | null
+    isFree?: boolean | null
+    price?: { currency?: string | null; final?: number | null; discountPercent?: number | null } | null
+    genres?: Array<{ description?: string | null }> | null
+  }> = []
+
+  try {
+    const wishlist = await getWishlist()
+    games = wishlist
+      .map((w) => (typeof w.game === 'object' && w.game ? w.game : null))
+      .filter(Boolean) as typeof games
+  } catch {
+    // Not authenticated
+  }
+
+  return (
+    <div className="container py-8">
+      <h1 className="mb-6 text-2xl font-bold">{t('wishlist')}</h1>
+      <GameGrid games={games} />
+    </div>
+  )
+}

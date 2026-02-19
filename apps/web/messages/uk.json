@@ -1,0 +1,66 @@
+{
+  "common": {
+    "appName": "Steam Diploma",
+    "home": "Головна",
+    "library": "Бібліотека",
+    "favorites": "Улюблені",
+    "wishlist": "Список бажань",
+    "recommendations": "Рекомендації",
+    "search": "Пошук",
+    "support": "Підтримка",
+    "signIn": "Увійти",
+    "signOut": "Вийти",
+    "loading": "Завантаження...",
+    "error": "Помилка",
+    "noResults": "Нічого не знайдено",
+    "language": "Мова"
+  },
+  "home": {
+    "title": "Steam Diploma",
+    "subtitle": "Ігровий магазин",
+    "hero": "Відкрийте для себе нові ігри"
+  },
+  "games": {
+    "free": "Безкоштовно",
+    "buy": "Купити",
+    "addToFavorites": "Додати до улюблених",
+    "removeFromFavorites": "Видалити з улюблених",
+    "addToWishlist": "Додати до списку бажань",
+    "removeFromWishlist": "Видалити зі списку бажань",
+    "inLibrary": "У бібліотеці",
+    "genres": "Жанри",
+    "platforms": "Платформи",
+    "developer": "Розробник",
+    "publisher": "Видавець",
+    "releaseDate": "Дата випуску",
+    "description": "Опис",
+    "screenshots": "Скріншоти",
+    "price": "Ціна",
+    "discount": "Знижка"
+  },
+  "chat": {
+    "placeholder": "Запитайте про ігри...",
+    "title": "AI Асистент",
+    "history": "Історія чатів",
+    "newChat": "Новий чат",
+    "thinking": "Думаю..."
+  },
+  "auth": {
+    "signInWith": "Увійти через {provider}",
+    "signInGoogle": "Увійти через Google",
+    "welcomeBack": "З поверненням!"
+  },
+  "support": {
+    "title": "Підтримка",
+    "subtitle": "Потрібна допомога? Зв'яжіться з нами",
+    "telegramButton": "Написати в Telegram",
+    "contactUs": "Зв'яжіться з нами"
+  },
+  "recommendations": {
+    "title": "Рекомендації",
+    "popular": "Популярні ігри",
+    "topRated": "Найкращі за оцінками",
+    "forYou": "Для вас",
+    "byGenre": "За жанром"
+  }
+}
