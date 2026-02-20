@@ -1,7 +1,21 @@
-import type { CommandContext, Context } from 'grammy'
+import type { CommandContext, Context } from "grammy";
 
 export async function helpCommand(ctx: CommandContext<Context>) {
-  await ctx.reply(
-    `Steam Diploma Bot Help\n\nAvailable commands:\n/start — Start the bot\n/search <query> — Search for games\n/support <message> — Contact support\n/help — Show this help\n\nYou can also use the Mini App button to browse our game store!`,
-  )
+  const lines = [
+    `📖 <b>Steam Games Bot — Help</b>`,
+    ``,
+    `<b>Available commands:</b>`,
+    `/start — Start the bot`,
+    `/search &lt;query&gt; — Search for games`,
+    `/game &lt;name&gt; — Game details &amp; info`,
+    `/popular — Top 5 popular games`,
+    `/support — Create a support ticket`,
+    `/link &lt;code&gt; — Link your website account`,
+    `/myid — Show your Telegram chat ID`,
+    `/help — Show this help`,
+    ``,
+    `You can also use the <b>Mini App</b> button to browse our game store!`,
+  ].join("\n");
+
+  await ctx.reply(lines, { parse_mode: "HTML" });
 }

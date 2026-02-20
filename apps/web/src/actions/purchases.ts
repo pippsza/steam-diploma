@@ -11,32 +11,46 @@ async function getUserId() {
 }
 
 export async function purchaseGame(gameId: string, price: number = 0) {
-  const userId = await getUserId()
-  const payload = await getPayload({ config })
+  try {
+    const userId = await getUserId()
+    const payload = await getPayload({ config })
 
-  // Check if already purchased
-  const existing = await payload.find({
-    collection: 'purchases',
-    where: {
-      user: { equals: userId },
-      game: { equals: gameId },
-    },
-    limit: 1,
-  })
+    // Check if already purchased
+    const existing = await payload.find({
+      collection: 'purchases',
+      where: {
+        user: { equals: userId },
+        game: { equals: gameId },
+      },
+      limit: 1,
+    })
 
-  if (existing.docs.length > 0) {
-    return { success: false, error: 'Already purchased' }
+    if (existing.docs.length > 0) {
+      return { success: false, error: 'Already purchased' }
+    }
+
+    await payload.create({
+      collection: 'purchases',
+      data: { user: userId, game: gameId, pricePaid: price },
+    })
+
+    // Remove from wishlist if it was there
+    const wishlisted = await payload.find({
+      collection: 'wishlist',
+      where: { user: { equals: userId }, game: { equals: gameId } },
+      limit: 1,
+    })
+    if (wishlisted.docs[0]) {
+      await payload.delete({ collection: 'wishlist', id: wishlisted.docs[0].id })
+    }
+
+    return { success: true }
+  } catch {
+    return { success: false, error: 'Not authenticated' }
   }
-
-  await payload.create({
-    collection: 'purchases',
-    data: { user: userId, game: gameId, pricePaid: price },
-  })
-
-  return { success: true }
 }
 
-export async function getLibrary() {
+export async function getLibrary(locale: string = 'en') {
   const userId = await getUserId()
   const payload = await getPayload({ config })
 
@@ -44,6 +58,7 @@ export async function getLibrary() {
     collection: 'purchases',
     where: { user: { equals: userId } },
     depth: 1,
+    locale: locale as 'en' | 'uk',
     limit: 100,
   })
 

@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import Script from 'next/script'
-import { expandMiniApp, getTelegramThemeParams } from '@/lib/tma'
+import { signIn, useSession } from 'next-auth/react'
+import { expandMiniApp, getTelegramThemeParams, getTelegramInitData } from '@/lib/tma'
 
 function applyTelegramTheme() {
   const params = getTelegramThemeParams()
@@ -27,10 +28,38 @@ function applyTelegramTheme() {
 }
 
 export function TMAProvider({ children }: { children: ReactNode }) {
+  const { status } = useSession()
+  const [autoLoginAttempted, setAutoLoginAttempted] = useState(false)
+
   useEffect(() => {
     expandMiniApp()
     applyTelegramTheme()
   }, [])
+
+  // Auto-login via Telegram initData
+  useEffect(() => {
+    if (status !== 'unauthenticated' || autoLoginAttempted) return
+    setAutoLoginAttempted(true)
+
+    const initData = getTelegramInitData()
+    if (!initData) return
+
+    fetch('/api/auth/telegram-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.user?.email) {
+          // Trigger Google sign-in with the matched account
+          signIn('google', { redirect: false })
+        }
+      })
+      .catch(() => {
+        // Silently fail — user can still use TMA without login
+      })
+  }, [status, autoLoginAttempted])
 
   return (
     <>

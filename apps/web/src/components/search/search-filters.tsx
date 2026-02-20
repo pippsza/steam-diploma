@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -33,11 +33,14 @@ interface SearchFiltersProps {
   currentGenre?: string
   currentFree?: string
   currentPlatform?: string
+  currentHasReqs?: string
 }
 
-export function SearchFilters({ currentQuery, currentGenre, currentFree, currentPlatform }: SearchFiltersProps) {
+export function SearchFilters({ currentQuery, currentGenre, currentFree, currentPlatform, currentHasReqs }: SearchFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [query, setQuery] = useState(currentQuery ?? '')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const updateParams = useCallback(
     (key: string, value: string | null) => {
@@ -53,19 +56,33 @@ export function SearchFilters({ currentQuery, currentGenre, currentFree, current
     [router, searchParams],
   )
 
+  useEffect(() => {
+    setQuery(currentQuery ?? '')
+  }, [currentQuery])
+
+  const handleQueryChange = (value: string) => {
+    setQuery(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      updateParams('q', value || null)
+    }, 400)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
+
   return (
     <div className="space-y-4 rounded-lg border p-4">
       <div>
         <label className="mb-2 block text-sm font-medium">Search</label>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            const formData = new FormData(e.currentTarget)
-            updateParams('q', formData.get('q') as string || null)
-          }}
-        >
-          <Input name="q" placeholder="Game name..." defaultValue={currentQuery} />
-        </form>
+        <Input
+          placeholder="Game name..."
+          value={query}
+          onChange={(e) => handleQueryChange(e.target.value)}
+        />
       </div>
 
       <Separator />
@@ -106,7 +123,7 @@ export function SearchFilters({ currentQuery, currentGenre, currentFree, current
 
       <Separator />
 
-      <div>
+      <div className="flex flex-col gap-2">
         <Button
           variant={currentFree === 'true' ? 'default' : 'outline'}
           size="sm"
@@ -115,9 +132,17 @@ export function SearchFilters({ currentQuery, currentGenre, currentFree, current
         >
           Free to Play
         </Button>
+        <Button
+          variant={currentHasReqs === 'true' ? 'default' : 'outline'}
+          size="sm"
+          className="w-full"
+          onClick={() => updateParams('reqs', currentHasReqs === 'true' ? null : 'true')}
+        >
+          Has PC Requirements
+        </Button>
       </div>
 
-      {(currentQuery || currentGenre || currentFree || currentPlatform) && (
+      {(currentQuery || currentGenre || currentFree || currentPlatform || currentHasReqs) && (
         <>
           <Separator />
           <Button

@@ -1,4 +1,10 @@
 import type { CollectionConfig } from 'payload'
+import { notifyWishlistDiscount } from '@/lib/telegram-notify'
+
+const requirementsFields = [
+  { name: 'minimum', type: 'textarea' as const },
+  { name: 'recommended', type: 'textarea' as const },
+]
 
 export const Games: CollectionConfig = {
   slug: 'games',
@@ -7,6 +13,40 @@ export const Games: CollectionConfig = {
   },
   access: {
     read: () => true,
+  },
+  hooks: {
+    afterChange: [
+      async ({ operation, doc, previousDoc, req }) => {
+        if (operation !== 'update') return
+        const prevDiscount = previousDoc?.price?.discountPercent ?? 0
+        const newDiscount = doc?.price?.discountPercent ?? 0
+        // Notify only when a discount appears (was 0 or null → now > 0)
+        if (prevDiscount > 0 || newDiscount <= 0) return
+
+        try {
+          // Find all wishlist entries for this game
+          const wishlistEntries = await req.payload.find({
+            collection: 'wishlist',
+            where: { game: { equals: doc.id } },
+            limit: 1000,
+            depth: 1,
+          })
+
+          for (const entry of wishlistEntries.docs) {
+            const user = entry.user as any
+            if (user?.telegramChatId && user?.telegramLinked) {
+              try {
+                await notifyWishlistDiscount(user.telegramChatId, doc)
+              } catch (err) {
+                console.error(`Failed to notify user ${user.id}:`, err)
+              }
+            }
+          }
+        } catch (err) {
+          console.error('Wishlist discount notification error:', err)
+        }
+      },
+    ],
   },
   fields: [
     {
@@ -21,6 +61,7 @@ export const Games: CollectionConfig = {
       type: 'text',
       required: true,
       index: true,
+      localized: true,
     },
     {
       name: 'type',
@@ -40,13 +81,16 @@ export const Games: CollectionConfig = {
     {
       name: 'shortDescription',
       type: 'textarea',
+      localized: true,
     },
     {
-      name: 'detailedDescription',
-      type: 'richText',
-      admin: {
-        condition: () => false,
-      },
+      name: 'aboutTheGame',
+      type: 'textarea',
+      localized: true,
+    },
+    {
+      name: 'supportedLanguages',
+      type: 'text',
     },
     {
       name: 'genres',
@@ -111,6 +155,21 @@ export const Games: CollectionConfig = {
       ],
     },
     {
+      name: 'pcRequirements',
+      type: 'group',
+      fields: requirementsFields,
+    },
+    {
+      name: 'macRequirements',
+      type: 'group',
+      fields: requirementsFields,
+    },
+    {
+      name: 'linuxRequirements',
+      type: 'group',
+      fields: requirementsFields,
+    },
+    {
       name: 'metacritic',
       type: 'group',
       fields: [
@@ -122,6 +181,20 @@ export const Games: CollectionConfig = {
       name: 'recommendations',
       type: 'group',
       fields: [{ name: 'total', type: 'number' }],
+    },
+    {
+      name: 'reviews',
+      type: 'array',
+      fields: [
+        { name: 'reviewId', type: 'text' },
+        { name: 'language', type: 'text' },
+        { name: 'review', type: 'textarea' },
+        { name: 'votedUp', type: 'checkbox' },
+        { name: 'playtimeForever', type: 'number' },
+        { name: 'timestampCreated', type: 'number' },
+        { name: 'votesUp', type: 'number' },
+        { name: 'votesFunny', type: 'number' },
+      ],
     },
     {
       name: 'detailsFetched',

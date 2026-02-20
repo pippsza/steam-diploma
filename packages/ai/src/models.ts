@@ -1,28 +1,26 @@
 export interface AIModelConfig {
   id: string
   name: string
-  provider: 'google'
+  provider: 'openrouter' | 'google'
   modelId: string
   isDefault: boolean
+  maxTokens?: number
 }
 
-/**
- * Hardcoded model configs for development.
- * In production, these are overridden by Payload Global values.
- */
 export const defaultModels: AIModelConfig[] = [
   {
-    id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash',
-    provider: 'google',
-    modelId: 'gemini-2.5-flash-preview-05-20',
+    id: 'openrouter-gpt-4o-mini',
+    name: 'GPT-4o Mini (OpenRouter)',
+    provider: 'openrouter',
+    modelId: 'openai/gpt-4o-mini',
     isDefault: true,
+    maxTokens: 300,
   },
   {
-    id: 'gemini-2.5-flash-lite',
-    name: 'Gemini 2.5 Flash Lite',
+    id: 'gemini-2.0-flash',
+    name: 'Gemini 2.0 Flash (fallback)',
     provider: 'google',
-    modelId: 'gemini-2.0-flash-lite',
+    modelId: 'gemini-2.0-flash',
     isDefault: false,
   },
 ]

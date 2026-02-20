@@ -1,31 +1,71 @@
-import 'dotenv/config'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { fetchSteamAppDetails } from '../lib/steam'
-import type { SteamAppDetails } from '../lib/steam'
+import {
+  fetchSteamAppDetails,
+  fetchSteamReviews,
+  parseRequirements,
+  stripHtml,
+} from '../lib/steam'
+import type { SteamAppDetails, SteamReview } from '../lib/steam'
 
 const STEAMSPY_API = 'https://steamspy.com/api.php'
-const TOP_GAMES_COUNT = 5000
-const DELAY_MS = 1500 // Rate limit: ~40 req/min
+const STEAMSPY_PAGES = 5
+const DELAY_MS = 1500
+const STEAMSPY_DELAY_MS = 2000
 const BATCH_LOG_INTERVAL = 50
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 async function fetchTopAppIds(): Promise<number[]> {
-  console.log('Fetching top games from SteamSpy...')
-  const res = await fetch(`${STEAMSPY_API}?request=all`)
-  const data = await res.json()
+  console.log(`Fetching top games from SteamSpy (${STEAMSPY_PAGES} pages)...`)
+  const allGames = new Map<number, number>()
 
-  const sorted = Object.entries(data)
-    .map(([, v]) => v as { appid: number; owners: string })
-    .sort((a, b) => {
-      const parseOwners = (s: string) => parseInt(s.replace(/,/g, '').split(' ')[0]) || 0
-      return parseOwners(b.owners) - parseOwners(a.owners)
-    })
-    .slice(0, TOP_GAMES_COUNT)
+  for (let page = 0; page < STEAMSPY_PAGES; page++) {
+    console.log(`  Fetching page ${page}...`)
+    try {
+      const res = await fetch(`${STEAMSPY_API}?request=all&page=${page}`)
+      const data = await res.json()
+      const entries = Object.values(data) as Array<{ appid: number; owners: string }>
 
-  console.log(`Got ${sorted.length} top game IDs`)
-  return sorted.map((g) => g.appid)
+      if (entries.length === 0) {
+        console.log(`  Page ${page} empty, stopping.`)
+        break
+      }
+
+      for (const entry of entries) {
+        const owners = parseInt(entry.owners.replace(/,/g, '').split(' ')[0]) || 0
+        allGames.set(entry.appid, owners)
+      }
+
+      console.log(`  Page ${page}: ${entries.length} games (total unique: ${allGames.size})`)
+
+      if (page + 1 < STEAMSPY_PAGES) {
+        await delay(STEAMSPY_DELAY_MS)
+      }
+    } catch (err) {
+      console.error(`  Error fetching page ${page}:`, err)
+    }
+  }
+
+  const sorted = [...allGames.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([appid]) => appid)
+
+  console.log(`Got ${sorted.length} unique game IDs`)
+  return sorted
+}
+
+function mapReviews(reviews: SteamReview[], language: string) {
+  return reviews.map((r) => ({
+    reviewId: r.recommendationid,
+    language,
+    review: r.review,
+    votedUp: r.voted_up,
+    playtimeForever: r.author.playtime_forever,
+    timestampCreated: r.timestamp_created,
+    votesUp: r.votes_up,
+    votesFunny: r.votes_funny,
+  }))
 }
 
 function mapDetailsToPayload(details: SteamAppDetails) {
@@ -35,6 +75,8 @@ function mapDetailsToPayload(details: SteamAppDetails) {
     type: details.type === 'game' ? 'game' : details.type === 'dlc' ? 'dlc' : details.type === 'demo' ? 'demo' : 'other',
     headerImage: details.header_image,
     shortDescription: details.short_description,
+    aboutTheGame: details.about_the_game ? stripHtml(details.about_the_game) : undefined,
+    supportedLanguages: details.supported_languages ? stripHtml(details.supported_languages) : undefined,
     isFree: details.is_free,
     genres: details.genres?.map((g) => ({ genreId: g.id, description: g.description })) ?? [],
     categories: details.categories?.map((c) => ({ categoryId: String(c.id), description: c.description })) ?? [],
@@ -51,6 +93,9 @@ function mapDetailsToPayload(details: SteamAppDetails) {
     developers: details.developers?.map((name) => ({ name })) ?? [],
     publishers: details.publishers?.map((name) => ({ name })) ?? [],
     platforms: details.platforms ?? { windows: false, mac: false, linux: false },
+    pcRequirements: parseRequirements(details.pc_requirements),
+    macRequirements: parseRequirements(details.mac_requirements),
+    linuxRequirements: parseRequirements(details.linux_requirements),
     metacritic: details.metacritic ? { score: details.metacritic.score, url: details.metacritic.url } : undefined,
     recommendations: details.recommendations ? { total: details.recommendations.total } : undefined,
     detailsFetched: true,
@@ -59,30 +104,26 @@ function mapDetailsToPayload(details: SteamAppDetails) {
 }
 
 async function main() {
-  console.log('Starting seed...')
+  console.log('Starting seed (dual-language + reviews)...')
   const payload = await getPayload({ config })
 
   const appids = await fetchTopAppIds()
 
-  // Check which games already exist
-  const existing = await payload.find({
-    collection: 'games',
-    where: { detailsFetched: { equals: true } },
-    limit: 0,
-  })
-  const existingIds = new Set(
+  // Check which games already have details fetched (skip those)
+  const fetchedIds = new Set(
     (
       await payload.find({
         collection: 'games',
         where: { detailsFetched: { equals: true } },
         limit: 100000,
+        locale: 'en',
         select: { appid: true },
       })
     ).docs.map((d) => d.appid),
   )
 
-  const toFetch = appids.filter((id) => !existingIds.has(id))
-  console.log(`${existingIds.size} already seeded, ${toFetch.length} to fetch`)
+  const toFetch = appids.filter((id) => !fetchedIds.has(id))
+  console.log(`${fetchedIds.size} already seeded, ${toFetch.length} to fetch`)
 
   let success = 0
   let failed = 0
@@ -91,22 +132,83 @@ async function main() {
     const appid = toFetch[i]
 
     try {
-      const details = await fetchSteamAppDetails(appid)
+      // Fetch EN + UK details in parallel
+      const [detailsEn, detailsUk] = await Promise.all([
+        fetchSteamAppDetails(appid, 'english'),
+        fetchSteamAppDetails(appid, 'ukrainian'),
+      ])
 
-      if (details && details.type === 'game') {
-        const gameData = mapDetailsToPayload(details)
-        await payload.create({ collection: 'games', data: gameData as never })
-        success++
-      } else {
+      if (!detailsEn || detailsEn.type !== 'game') {
         failed++
+        if ((i + 1) % BATCH_LOG_INTERVAL === 0) {
+          console.log(`Progress: ${i + 1}/${toFetch.length} | OK: ${success} | Fail: ${failed}`)
+        }
+        if (i + 1 < toFetch.length) await delay(DELAY_MS)
+        continue
       }
+
+      // Fetch reviews EN + UK in parallel
+      const [reviewsEn, reviewsUk] = await Promise.all([
+        fetchSteamReviews(appid, 'english', 5),
+        fetchSteamReviews(appid, 'ukrainian', 5),
+      ])
+
+      const gameData = mapDetailsToPayload(detailsEn)
+      const allReviews = [
+        ...mapReviews(reviewsEn, 'english'),
+        ...mapReviews(reviewsUk, 'ukrainian'),
+      ]
+
+      // Create or update with EN locale
+      let gameId: string | undefined
+      try {
+        const created = await payload.create({
+          collection: 'games',
+          locale: 'en',
+          data: { ...gameData, reviews: allReviews } as never,
+        })
+        gameId = String(created.id)
+      } catch {
+        // Duplicate — update existing
+        const existing = await payload.find({
+          collection: 'games',
+          where: { appid: { equals: appid } },
+          locale: 'en',
+          limit: 1,
+        })
+        if (existing.docs.length > 0) {
+          gameId = String(existing.docs[0].id)
+          await payload.update({
+            collection: 'games',
+            id: gameId!,
+            locale: 'en',
+            data: { ...gameData, reviews: allReviews } as never,
+          })
+        }
+      }
+
+      // Update with UK locale (localized fields only)
+      if (gameId && detailsUk) {
+        await payload.update({
+          collection: 'games',
+          id: gameId,
+          locale: 'uk',
+          data: {
+            name: detailsUk.name,
+            shortDescription: detailsUk.short_description,
+            aboutTheGame: detailsUk.about_the_game ? stripHtml(detailsUk.about_the_game) : undefined,
+          } as never,
+        })
+      }
+
+      success++
     } catch (err) {
       failed++
       console.error(`Error seeding ${appid}:`, err)
     }
 
     if ((i + 1) % BATCH_LOG_INTERVAL === 0) {
-      console.log(`Progress: ${i + 1}/${toFetch.length} | Success: ${success} | Failed: ${failed}`)
+      console.log(`Progress: ${i + 1}/${toFetch.length} | OK: ${success} | Fail: ${failed}`)
     }
 
     if (i + 1 < toFetch.length) {

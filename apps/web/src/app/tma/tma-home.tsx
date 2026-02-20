@@ -1,37 +1,37 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { getSteamHeaderImage } from '@/lib/steam'
-import { hapticFeedback } from '@/lib/tma'
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { getSteamHeaderImage } from "@/lib/steam";
+import { hapticFeedback } from "@/lib/tma";
 
 interface Game {
-  appid: number
-  name: string
-  headerImage?: string | null
-  isFree?: boolean | null
+  appid: number;
+  name: string;
+  headerImage?: string | null;
+  isFree?: boolean | null;
   price?: {
-    currency?: string | null
-    final?: number | null
-    discountPercent?: number | null
-  } | null
-  genres?: Array<{ description?: string | null }> | null
+    currency?: string | null;
+    final?: number | null;
+    discountPercent?: number | null;
+  } | null;
+  genres?: Array<{ description?: string | null }> | null;
 }
 
 export function TMAHome({ games }: { games: Game[] }) {
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState("");
 
   const filtered = search
     ? games.filter((g) => g.name.toLowerCase().includes(search.toLowerCase()))
-    : games
+    : games;
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">Steam Diploma</h1>
+      <h1 className="text-xl font-bold">Steam Games</h1>
 
       <Input
         placeholder="Search games..."
@@ -45,7 +45,7 @@ export function TMAHome({ games }: { games: Game[] }) {
           <Link
             key={game.appid}
             href={`/tma/games/${game.appid}`}
-            onClick={() => hapticFeedback('selection')}
+            onClick={() => hapticFeedback("selection")}
           >
             <Card className="overflow-hidden">
               <div className="flex gap-3">
@@ -59,15 +59,23 @@ export function TMAHome({ games }: { games: Game[] }) {
                   />
                 </div>
                 <CardContent className="flex flex-col justify-center p-2">
-                  <h3 className="line-clamp-1 text-sm font-medium">{game.name}</h3>
+                  <h3 className="line-clamp-1 text-sm font-medium">
+                    {game.name}
+                  </h3>
                   <div className="mt-1 flex items-center gap-2">
                     {game.genres?.slice(0, 1).map((g) => (
-                      <Badge key={g.description} variant="secondary" className="text-xs">
+                      <Badge
+                        key={g.description}
+                        variant="secondary"
+                        className="text-xs"
+                      >
                         {g.description}
                       </Badge>
                     ))}
                     {game.isFree ? (
-                      <span className="text-xs font-bold text-green-500">Free</span>
+                      <span className="text-xs font-bold text-green-500">
+                        Free
+                      </span>
                     ) : game.price?.final ? (
                       <span className="text-xs font-bold">
                         ${(game.price.final / 100).toFixed(2)}
@@ -81,5 +89,5 @@ export function TMAHome({ games }: { games: Game[] }) {
         ))}
       </div>
     </div>
-  )
+  );
 }

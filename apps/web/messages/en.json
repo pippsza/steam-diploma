@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Steam Diploma",
+    "appName": "Steam Games",
     "home": "Home",
     "library": "Library",
     "favorites": "Favorites",
@@ -8,6 +8,7 @@
     "recommendations": "Recommendations",
     "search": "Search",
     "support": "Support",
+    "settings": "Settings",
     "signIn": "Sign In",
     "signOut": "Sign Out",
     "loading": "Loading...",
@@ -16,7 +17,7 @@
     "language": "Language"
   },
   "home": {
-    "title": "Steam Diploma",
+    "title": "Steam Games",
     "subtitle": "Game Store",
     "hero": "Discover new games"
   },
@@ -36,25 +37,79 @@
     "description": "Description",
     "screenshots": "Screenshots",
     "price": "Price",
-    "discount": "Discount"
+    "discount": "Discount",
+    "emptyLibrary": "Your library is empty",
+    "emptyLibraryHint": "Find a game you like and add it to your library",
+    "emptyFavorites": "No favorite games yet",
+    "emptyFavoritesHint": "Tap the heart on a game page to add it here",
+    "emptyWishlist": "Your wishlist is empty",
+    "emptyWishlistHint": "Add games you want to buy later",
+    "browseGames": "Browse games",
+    "showMore": "Show more"
   },
   "chat": {
     "placeholder": "Ask about games...",
     "title": "AI Assistant",
     "history": "Chat History",
     "newChat": "New Chat",
-    "thinking": "Thinking..."
+    "thinking": "Thinking...",
+    "noChats": "No chats yet",
+    "welcomeTitle": "Hi! I'm your gaming assistant",
+    "welcomeDescription": "I can help you find games, get recommendations based on your preferences, and answer questions about any game in our catalog.",
+    "showingResults": "Found {count} games",
+    "notVerified": "Your account is not verified. Contact the administrator to get access to the AI assistant."
+  },
+  "discover": {
+    "title": "AI Recommendations",
+    "continueChat": "Continue chatting with AI",
+    "noResults": "No games found. Try asking differently."
   },
   "auth": {
     "signInWith": "Sign in with {provider}",
     "signInGoogle": "Sign in with Google",
-    "welcomeBack": "Welcome back!"
+    "welcomeBack": "Welcome back!",
+    "signInRequired": "Sign in required",
+    "signInRequiredDescription": "Sign in to your account to use this feature",
+    "signInToUseAI": "Sign in to chat with AI assistant",
+    "signInToInteract": "Sign in to add games to favorites and wishlist"
   },
   "support": {
     "title": "Support",
     "subtitle": "Need help? Contact us",
+    "formTitle": "Submit a Ticket",
+    "nameLabel": "Name",
+    "namePlaceholder": "Your name",
+    "emailLabel": "Email (optional)",
+    "emailPlaceholder": "your@email.com",
+    "subjectLabel": "Subject",
+    "subjectPlaceholder": "Brief description of your issue",
+    "typeLabel": "Type",
+    "priorityLabel": "Priority",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Describe your issue in detail...",
+    "submitButton": "Submit Ticket",
+    "successMessage": "Your ticket has been submitted! We will review it soon.",
+    "errorMessage": "Failed to submit ticket. Please try again.",
+    "orTelegram": "or get instant help",
     "telegramButton": "Message on Telegram",
     "contactUs": "Contact Us"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account settings",
+    "telegramSection": "Telegram",
+    "telegramDescription": "Link your Telegram account to receive notifications about wishlist discounts and use auto-login in the Mini App.",
+    "linkTelegram": "Link Telegram",
+    "unlinkTelegram": "Unlink",
+    "telegramLinked": "Linked to",
+    "telegramLinking": "Waiting for confirmation...",
+    "telegramLinkCodeHint": "Send the command below to our Telegram bot to link your account:",
+    "sendLinkCommand": "Send to the bot:",
+    "copyCode": "Copy command",
+    "openBot": "Open Bot",
+    "linkExpired": "Code expired. Try again.",
+    "linkSuccess": "Telegram linked successfully!",
+    "signInRequired": "Sign in to access settings"
   },
   "recommendations": {
     "title": "Recommendations",

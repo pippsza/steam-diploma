@@ -1,24 +1,24 @@
-import type { CommandContext, Context } from 'grammy'
-import { PayloadService } from '../services/payload'
+import { InlineKeyboard } from "grammy";
+import type { CommandContext, Context } from "grammy";
+import { setSupportState } from "../state";
 
 export async function supportCommand(ctx: CommandContext<Context>) {
-  const message = ctx.match?.trim()
+  const userId = ctx.from?.id;
+  if (!userId) return;
 
-  if (!message) {
-    await ctx.reply('Usage: /support <your message>\nExample: /support I need help with my purchase')
-    return
-  }
+  setSupportState(userId, { step: "type" });
 
-  try {
-    await PayloadService.createSupportTicket({
-      telegramUserId: String(ctx.from?.id ?? ''),
-      telegramUsername: ctx.from?.username ?? '',
-      message,
-    })
+  const keyboard = new InlineKeyboard()
+    .text("🐛 Bug", "support_type_bug")
+    .text("❓ Question", "support_type_question")
+    .row()
+    .text("💡 Feature", "support_type_feature_request")
+    .text("👤 Account", "support_type_account")
+    .row()
+    .text("📦 Other", "support_type_other");
 
-    await ctx.reply('Your support ticket has been created. Our team will get back to you soon!')
-  } catch (err) {
-    console.error('Support ticket error:', err)
-    await ctx.reply('Sorry, could not create a support ticket. Please try again later.')
-  }
+  await ctx.reply("📋 *Create Support Ticket*\n\nStep 1/3: Choose the type of your request:", {
+    parse_mode: "Markdown",
+    reply_markup: keyboard,
+  });
 }

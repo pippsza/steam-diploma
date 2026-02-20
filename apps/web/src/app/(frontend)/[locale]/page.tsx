@@ -1,10 +1,16 @@
-import { useTranslations } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { GameGrid } from '@/components/games/game-grid'
+import { PageTransition } from '@/components/layout/page-transition'
 
-export default async function HomePage() {
-  const t = useTranslations('home')
+interface Props {
+  params: Promise<{ locale: string }>
+}
+
+export default async function HomePage({ params }: Props) {
+  const { locale } = await params
+  const t = await getTranslations('home')
 
   const payload = await getPayload({ config })
 
@@ -12,6 +18,7 @@ export default async function HomePage() {
     collection: 'games',
     where: { detailsFetched: { equals: true } },
     sort: '-recommendations.total',
+    locale: locale as 'en' | 'uk',
     limit: 8,
   })
 
@@ -19,11 +26,12 @@ export default async function HomePage() {
     collection: 'games',
     where: { detailsFetched: { equals: true } },
     sort: '-createdAt',
+    locale: locale as 'en' | 'uk',
     limit: 8,
   })
 
   return (
-    <div className="container space-y-12 py-8">
+    <PageTransition className="container space-y-12 py-8">
       <section className="text-center">
         <h1 className="text-4xl font-bold">{t('title')}</h1>
         <p className="mt-2 text-lg text-muted-foreground">{t('hero')}</p>
@@ -32,16 +40,16 @@ export default async function HomePage() {
       {popular.docs.length > 0 && (
         <section>
           <h2 className="mb-4 text-2xl font-semibold">Popular Games</h2>
-          <GameGrid games={popular.docs} />
+          <GameGrid games={popular.docs as any} />
         </section>
       )}
 
       {recent.docs.length > 0 && (
         <section>
           <h2 className="mb-4 text-2xl font-semibold">Recently Added</h2>
-          <GameGrid games={recent.docs} />
+          <GameGrid games={recent.docs as any} />
         </section>
       )}
-    </div>
+    </PageTransition>
   )
 }

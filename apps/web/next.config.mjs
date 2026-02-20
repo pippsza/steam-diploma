@@ -6,9 +6,11 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  allowedDevOrigins: ['*.ngrok-free.dev', '*.ngrok.io'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'cdn.akamai.steamstatic.com' },
+      { protocol: 'https', hostname: 'shared.akamai.steamstatic.com' },
       { protocol: 'https', hostname: 'steamcdn-a.akamaihd.net' },
     ],
   },

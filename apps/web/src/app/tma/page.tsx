@@ -12,5 +12,5 @@ export default async function TMAHomePage() {
     where: { detailsFetched: { equals: true } },
   })
 
-  return <TMAHome games={popular.docs} />
+  return <TMAHome games={popular.docs as any} />
 }

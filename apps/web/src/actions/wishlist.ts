@@ -45,7 +45,7 @@ export async function removeFromWishlist(gameId: string) {
   return { success: true }
 }
 
-export async function getWishlist() {
+export async function getWishlist(locale: string = 'en') {
   const userId = await getUserId()
   const payload = await getPayload({ config })
 
@@ -53,8 +53,29 @@ export async function getWishlist() {
     collection: 'wishlist',
     where: { user: { equals: userId } },
     depth: 1,
+    locale: locale as 'en' | 'uk',
     limit: 100,
   })
 
   return result.docs
+}
+
+export async function isWishlisted(gameId: string) {
+  try {
+    const userId = await getUserId()
+    const payload = await getPayload({ config })
+
+    const result = await payload.find({
+      collection: 'wishlist',
+      where: {
+        user: { equals: userId },
+        game: { equals: gameId },
+      },
+      limit: 1,
+    })
+
+    return result.docs.length > 0
+  } catch {
+    return false
+  }
 }

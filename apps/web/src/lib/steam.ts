@@ -17,6 +17,15 @@ export function getSteamHeroImage(appid: number): string {
   return `${STEAM_CDN_BASE}/${appid}/library_hero.jpg`
 }
 
+export function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, '').trim()
+}
+
+export interface SteamRequirements {
+  minimum?: string
+  recommended?: string
+}
+
 export interface SteamAppDetails {
   type: string
   name: string
@@ -24,6 +33,8 @@ export interface SteamAppDetails {
   is_free: boolean
   short_description: string
   detailed_description: string
+  about_the_game: string
+  supported_languages: string
   header_image: string
   developers?: string[]
   publishers?: string[]
@@ -38,6 +49,9 @@ export interface SteamAppDetails {
     mac: boolean
     linux: boolean
   }
+  pc_requirements: SteamRequirements | []
+  mac_requirements: SteamRequirements | []
+  linux_requirements: SteamRequirements | []
   metacritic?: {
     score: number
     url: string
@@ -49,9 +63,37 @@ export interface SteamAppDetails {
   release_date?: { coming_soon: boolean; date: string }
 }
 
-export async function fetchSteamAppDetails(appid: number): Promise<SteamAppDetails | null> {
+export interface SteamReview {
+  recommendationid: string
+  author: {
+    steamid: string
+    num_games_owned: number
+    num_reviews: number
+    playtime_forever: number
+    playtime_last_two_weeks: number
+    last_played: number
+  }
+  language: string
+  review: string
+  timestamp_created: number
+  timestamp_updated: number
+  voted_up: boolean
+  votes_up: number
+  votes_funny: number
+  weighted_vote_score: string
+  steam_purchase: boolean
+  received_for_free: boolean
+  written_during_early_access: boolean
+}
+
+export type SteamLanguage = 'english' | 'ukrainian'
+
+export async function fetchSteamAppDetails(
+  appid: number,
+  lang: SteamLanguage = 'english',
+): Promise<SteamAppDetails | null> {
   try {
-    const res = await fetch(`${STEAM_STORE_API}/appdetails?appids=${appid}&l=english`, {
+    const res = await fetch(`${STEAM_STORE_API}/appdetails?appids=${appid}&l=${lang}`, {
       next: { revalidate: 86400 },
     })
 
@@ -65,6 +107,42 @@ export async function fetchSteamAppDetails(appid: number): Promise<SteamAppDetai
     return appData.data as SteamAppDetails
   } catch {
     return null
+  }
+}
+
+export async function fetchSteamReviews(
+  appid: number,
+  lang: SteamLanguage = 'english',
+  count: number = 5,
+): Promise<SteamReview[]> {
+  try {
+    const res = await fetch(
+      `https://store.steampowered.com/appreviews/${appid}?json=1&language=${lang}&num_per_page=${count}&filter=recent&purchase_type=steam`,
+    )
+
+    if (!res.ok) return []
+
+    const data = await res.json()
+    if (data.success !== 1) return []
+
+    return (data.reviews ?? []) as SteamReview[]
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Parse requirements from Steam API response.
+ * Steam returns `[]` (empty array) when no requirements exist, or an object with minimum/recommended.
+ */
+export function parseRequirements(
+  reqs: SteamRequirements | [],
+): { minimum?: string; recommended?: string } | undefined {
+  if (Array.isArray(reqs)) return undefined
+  if (!reqs.minimum && !reqs.recommended) return undefined
+  return {
+    minimum: reqs.minimum ? stripHtml(reqs.minimum) : undefined,
+    recommended: reqs.recommended ? stripHtml(reqs.recommended) : undefined,
   }
 }
 
@@ -82,7 +160,7 @@ export async function fetchSteamAppDetailsBatch(
 ): Promise<Map<number, SteamAppDetails>> {
   const results = new Map<number, SteamAppDetails>()
   const batchSize = 1
-  const delayMs = 1500 // ~40 req/min to stay under rate limits
+  const delayMs = 1500
 
   for (let i = 0; i < appids.length; i += batchSize) {
     const appid = appids[i]

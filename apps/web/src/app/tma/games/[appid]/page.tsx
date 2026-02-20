@@ -10,5 +10,5 @@ export default async function TMAGamePage({ params }: { params: Promise<{ appid:
     notFound()
   }
 
-  return <TMAGameDetail game={game} />
+  return <TMAGameDetail game={game as any} />
 }

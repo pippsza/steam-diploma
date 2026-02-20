@@ -13,7 +13,9 @@ import { Games } from './collections/Games'
 import { Media } from './collections/Media'
 import { Purchases } from './collections/Purchases'
 import { SupportTickets } from './collections/SupportTickets'
+import { Users } from './collections/Users'
 import { Wishlist } from './collections/Wishlist'
+import { TelegramAdmins } from './globals/TelegramAdmins'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -25,7 +27,13 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Games, Favorites, Wishlist, Purchases, ChatSessions, SupportTickets, Media],
+  localization: {
+    locales: ['en', 'uk'],
+    defaultLocale: 'en',
+    fallback: true,
+  },
+  collections: [Users, Games, Favorites, Wishlist, Purchases, ChatSessions, SupportTickets, Media],
+  globals: [TelegramAdmins],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

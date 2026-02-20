@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import { Heart, Star, ShoppingCart, Check } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { addFavorite, removeFavorite } from '@/actions/favorites'
 import { addToWishlist, removeFromWishlist } from '@/actions/wishlist'
 import { purchaseGame } from '@/actions/purchases'
@@ -24,77 +26,114 @@ export function GameActions({
   price = 0,
 }: GameActionsProps) {
   const { data: session } = useSession()
+  const t = useTranslations('auth')
   const [isPending, startTransition] = useTransition()
   const [isFav, setIsFav] = useState(initialIsFavorite)
   const [isWish, setIsWish] = useState(initialIsWishlisted)
   const [isOwned, setIsOwned] = useState(initialIsOwned)
 
-  if (!session?.user) return null
+  const isAuthenticated = !!session?.user
+
+  const requireAuth = (action: () => void) => {
+    if (!isAuthenticated) {
+      signIn('google')
+      return
+    }
+    action()
+  }
 
   const handleFavorite = () => {
-    startTransition(async () => {
-      if (isFav) {
-        await removeFavorite(gameId)
-        setIsFav(false)
-      } else {
-        await addFavorite(gameId)
-        setIsFav(true)
-      }
+    requireAuth(() => {
+      startTransition(async () => {
+        if (isFav) {
+          await removeFavorite(gameId)
+          setIsFav(false)
+        } else {
+          await addFavorite(gameId)
+          setIsFav(true)
+        }
+      })
     })
   }
 
   const handleWishlist = () => {
-    startTransition(async () => {
-      if (isWish) {
-        await removeFromWishlist(gameId)
-        setIsWish(false)
-      } else {
-        await addToWishlist(gameId)
-        setIsWish(true)
-      }
+    requireAuth(() => {
+      startTransition(async () => {
+        if (isWish) {
+          await removeFromWishlist(gameId)
+          setIsWish(false)
+        } else {
+          await addToWishlist(gameId)
+          setIsWish(true)
+        }
+      })
     })
   }
 
   const handlePurchase = () => {
-    startTransition(async () => {
-      const result = await purchaseGame(gameId, price)
-      if (result.success) {
-        setIsOwned(true)
-      }
+    requireAuth(() => {
+      startTransition(async () => {
+        const result = await purchaseGame(gameId, price)
+        if (result.success) {
+          setIsOwned(true)
+          setIsWish(false)
+        }
+      })
     })
   }
 
+  const authTooltip = !isAuthenticated ? t('signInToInteract') : undefined
+
   return (
-    <div className="flex flex-wrap gap-2">
-      {isOwned ? (
-        <Button variant="secondary" disabled>
-          <Check className="mr-2 h-4 w-4" />
-          In Library
-        </Button>
-      ) : (
-        <Button onClick={handlePurchase} disabled={isPending}>
-          <ShoppingCart className="mr-2 h-4 w-4" />
-          {price > 0 ? `Buy $${(price / 100).toFixed(2)}` : 'Get Free'}
-        </Button>
-      )}
+    <TooltipProvider>
+      <div className="flex flex-wrap gap-2">
+        {isOwned ? (
+          <Button variant="secondary" disabled>
+            <Check className="mr-2 h-4 w-4" />
+            In Library
+          </Button>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={handlePurchase} disabled={isPending}>
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                {price > 0 ? `Buy $${(price / 100).toFixed(2)}` : 'Get Free'}
+              </Button>
+            </TooltipTrigger>
+            {authTooltip && <TooltipContent>{authTooltip}</TooltipContent>}
+          </Tooltip>
+        )}
 
-      <Button
-        variant={isFav ? 'default' : 'outline'}
-        size="icon"
-        onClick={handleFavorite}
-        disabled={isPending}
-      >
-        <Heart className={`h-4 w-4 ${isFav ? 'fill-current' : ''}`} />
-      </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={isFav ? 'default' : 'outline'}
+              size="icon"
+              onClick={handleFavorite}
+              disabled={isPending}
+            >
+              <Heart className={`h-4 w-4 ${isFav ? 'fill-current' : ''}`} />
+            </Button>
+          </TooltipTrigger>
+          {authTooltip && <TooltipContent>{authTooltip}</TooltipContent>}
+        </Tooltip>
 
-      <Button
-        variant={isWish ? 'default' : 'outline'}
-        size="icon"
-        onClick={handleWishlist}
-        disabled={isPending}
-      >
-        <Star className={`h-4 w-4 ${isWish ? 'fill-current' : ''}`} />
-      </Button>
-    </div>
+        {!isOwned && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={isWish ? 'default' : 'outline'}
+                size="icon"
+                onClick={handleWishlist}
+                disabled={isPending}
+              >
+                <Star className={`h-4 w-4 ${isWish ? 'fill-current' : ''}`} />
+              </Button>
+            </TooltipTrigger>
+            {authTooltip && <TooltipContent>{authTooltip}</TooltipContent>}
+          </Tooltip>
+        )}
+      </div>
+    </TooltipProvider>
   )
 }

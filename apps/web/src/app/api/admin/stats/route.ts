@@ -49,7 +49,7 @@ export async function GET() {
     popularGames: popularGames.docs.map((g) => ({
       name: g.name,
       appid: g.appid,
-      recommendations: g.recommendations?.total ?? 0,
+      recommendations: (g.recommendations as any)?.total ?? 0,
     })),
   })
 }

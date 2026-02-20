@@ -23,6 +23,6 @@ export const Wishlist: CollectionConfig = {
     },
   ],
   indexes: [
-    { fields: { user: 1, game: 1 }, options: { unique: true } },
+    { fields: ['user', 'game'], unique: true },
   ],
 }

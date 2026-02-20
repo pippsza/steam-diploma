@@ -1,13 +1,36 @@
+import type { ReactNode } from 'react'
 import Image from 'next/image'
+import { ThumbsUp, ThumbsDown, Clock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent } from '@/components/ui/card'
 import { getSteamHeaderImage } from '@/lib/steam'
+import { ScreenshotGallery } from '@/components/games/screenshot-gallery'
+
+interface RequirementsGroup {
+  minimum?: string | null
+  recommended?: string | null
+}
+
+interface Review {
+  reviewId?: string | null
+  language?: string | null
+  review?: string | null
+  votedUp?: boolean | null
+  playtimeForever?: number | null
+  timestampCreated?: number | null
+  votesUp?: number | null
+  votesFunny?: number | null
+}
 
 interface GameDetailProps {
   appid: number
   name: string
   headerImage?: string | null
   shortDescription?: string | null
+  aboutTheGame?: string | null
+  supportedLanguages?: string | null
   isFree?: boolean | null
   price?: {
     currency?: string | null
@@ -23,6 +46,44 @@ interface GameDetailProps {
   metacritic?: { score?: number | null } | null
   screenshots?: Array<{ url?: string | null; thumbnailUrl?: string | null }> | null
   recommendations?: { total?: number | null } | null
+  pcRequirements?: RequirementsGroup | null
+  macRequirements?: RequirementsGroup | null
+  linuxRequirements?: RequirementsGroup | null
+  reviews?: Review[] | null
+  locale?: string
+  children?: ReactNode
+}
+
+function formatPlaytime(minutes: number): string {
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  return `${hours.toLocaleString()}h`
+}
+
+function formatTimestamp(ts: number): string {
+  return new Date(ts * 1000).toLocaleDateString()
+}
+
+function RequirementsSection({ label, data }: { label: string; data: RequirementsGroup }) {
+  return (
+    <div className="space-y-3">
+      <h4 className="font-medium">{label}</h4>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {data.minimum && (
+          <div>
+            <p className="mb-1 text-sm font-medium text-muted-foreground">Minimum</p>
+            <p className="whitespace-pre-line text-sm">{data.minimum}</p>
+          </div>
+        )}
+        {data.recommended && (
+          <div>
+            <p className="mb-1 text-sm font-medium text-muted-foreground">Recommended</p>
+            <p className="whitespace-pre-line text-sm">{data.recommended}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export function GameDetail({
@@ -30,6 +91,8 @@ export function GameDetail({
   name,
   headerImage,
   shortDescription,
+  aboutTheGame,
+  supportedLanguages,
   isFree,
   price,
   genres,
@@ -40,6 +103,12 @@ export function GameDetail({
   metacritic,
   screenshots,
   recommendations,
+  pcRequirements,
+  macRequirements,
+  linuxRequirements,
+  reviews,
+  locale = 'en',
+  children,
 }: GameDetailProps) {
   const imageUrl = headerImage || getSteamHeaderImage(appid)
 
@@ -48,6 +117,26 @@ export function GameDetail({
     : price?.final
       ? `$${(price.final / 100).toFixed(2)}`
       : 'N/A'
+
+  const hasRequirements =
+    pcRequirements?.minimum || pcRequirements?.recommended ||
+    macRequirements?.minimum || macRequirements?.recommended ||
+    linuxRequirements?.minimum || linuxRequirements?.recommended
+
+  // Filter reviews by current locale language, fallback to english
+  const langMap: Record<string, string> = { en: 'english', uk: 'ukrainian' }
+  const currentLang = langMap[locale] ?? 'english'
+  const localeReviews = reviews?.filter((r) => r.language === currentLang) ?? []
+  const displayReviews = localeReviews.length > 0
+    ? localeReviews
+    : reviews?.filter((r) => r.language === 'english') ?? []
+
+  // Determine default tab for requirements
+  const defaultReqTab = pcRequirements?.minimum || pcRequirements?.recommended
+    ? 'pc'
+    : macRequirements?.minimum || macRequirements?.recommended
+      ? 'mac'
+      : 'linux'
 
   return (
     <div className="space-y-6">
@@ -76,10 +165,24 @@ export function GameDetail({
         </div>
       </div>
 
+      {/* Actions (buy, favorite, wishlist) */}
+      {children}
+
       <Separator />
 
       {/* Description */}
       {shortDescription && <p className="text-muted-foreground">{shortDescription}</p>}
+
+      {/* About the Game */}
+      {aboutTheGame && (
+        <>
+          <Separator />
+          <div>
+            <h2 className="mb-3 text-lg font-semibold">About the Game</h2>
+            <p className="whitespace-pre-line text-sm text-muted-foreground">{aboutTheGame}</p>
+          </div>
+        </>
+      )}
 
       {/* Info grid */}
       <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
@@ -133,6 +236,12 @@ export function GameDetail({
             <p className="text-muted-foreground">{recommendations.total.toLocaleString()}</p>
           </div>
         )}
+        {supportedLanguages && (
+          <div className="col-span-2">
+            <p className="font-medium">Languages</p>
+            <p className="text-muted-foreground">{supportedLanguages}</p>
+          </div>
+        )}
       </div>
 
       {/* Screenshots */}
@@ -141,16 +250,79 @@ export function GameDetail({
           <Separator />
           <div>
             <h2 className="mb-3 text-lg font-semibold">Screenshots</h2>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {screenshots.slice(0, 4).map((s, i) => (
-                <div key={i} className="relative aspect-video overflow-hidden rounded-lg">
-                  <Image
-                    src={s.url || s.thumbnailUrl || ''}
-                    alt={`${name} screenshot ${i + 1}`}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
+            <ScreenshotGallery screenshots={screenshots} gameName={name} />
+          </div>
+        </>
+      )}
+
+      {/* System Requirements */}
+      {hasRequirements && (
+        <>
+          <Separator />
+          <div>
+            <h2 className="mb-3 text-lg font-semibold">System Requirements</h2>
+            <Tabs defaultValue={defaultReqTab}>
+              <TabsList>
+                {(pcRequirements?.minimum || pcRequirements?.recommended) && (
+                  <TabsTrigger value="pc">Windows</TabsTrigger>
+                )}
+                {(macRequirements?.minimum || macRequirements?.recommended) && (
+                  <TabsTrigger value="mac">macOS</TabsTrigger>
+                )}
+                {(linuxRequirements?.minimum || linuxRequirements?.recommended) && (
+                  <TabsTrigger value="linux">Linux</TabsTrigger>
+                )}
+              </TabsList>
+              {pcRequirements && (pcRequirements.minimum || pcRequirements.recommended) && (
+                <TabsContent value="pc">
+                  <RequirementsSection label="Windows" data={pcRequirements} />
+                </TabsContent>
+              )}
+              {macRequirements && (macRequirements.minimum || macRequirements.recommended) && (
+                <TabsContent value="mac">
+                  <RequirementsSection label="macOS" data={macRequirements} />
+                </TabsContent>
+              )}
+              {linuxRequirements && (linuxRequirements.minimum || linuxRequirements.recommended) && (
+                <TabsContent value="linux">
+                  <RequirementsSection label="Linux" data={linuxRequirements} />
+                </TabsContent>
+              )}
+            </Tabs>
+          </div>
+        </>
+      )}
+
+      {/* Reviews */}
+      {displayReviews.length > 0 && (
+        <>
+          <Separator />
+          <div>
+            <h2 className="mb-3 text-lg font-semibold">Reviews</h2>
+            <div className="space-y-3">
+              {displayReviews.map((r) => (
+                <Card key={r.reviewId}>
+                  <CardContent className="p-4">
+                    <div className="mb-2 flex items-center gap-3 text-sm text-muted-foreground">
+                      {r.votedUp ? (
+                        <ThumbsUp className="size-4 text-green-500" />
+                      ) : (
+                        <ThumbsDown className="size-4 text-red-500" />
+                      )}
+                      <span className="flex items-center gap-1">
+                        <Clock className="size-3" />
+                        {r.playtimeForever != null ? formatPlaytime(r.playtimeForever) : '—'}
+                      </span>
+                      {r.timestampCreated && (
+                        <span>{formatTimestamp(r.timestampCreated)}</span>
+                      )}
+                      {r.votesUp != null && r.votesUp > 0 && (
+                        <span>{r.votesUp} helpful</span>
+                      )}
+                    </div>
+                    <p className="line-clamp-4 text-sm">{r.review}</p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>

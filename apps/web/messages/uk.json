@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Steam Diploma",
+    "appName": "Steam Games",
     "home": "Головна",
     "library": "Бібліотека",
     "favorites": "Улюблені",
@@ -8,6 +8,7 @@
     "recommendations": "Рекомендації",
     "search": "Пошук",
     "support": "Підтримка",
+    "settings": "Налаштування",
     "signIn": "Увійти",
     "signOut": "Вийти",
     "loading": "Завантаження...",
@@ -16,7 +17,7 @@
     "language": "Мова"
   },
   "home": {
-    "title": "Steam Diploma",
+    "title": "Steam Games",
     "subtitle": "Ігровий магазин",
     "hero": "Відкрийте для себе нові ігри"
   },
@@ -36,25 +37,79 @@
     "description": "Опис",
     "screenshots": "Скріншоти",
     "price": "Ціна",
-    "discount": "Знижка"
+    "discount": "Знижка",
+    "emptyLibrary": "Ваша бібліотека поки порожня",
+    "emptyLibraryHint": "Знайдіть гру, яка вам сподобається, та додайте її до бібліотеки",
+    "emptyFavorites": "У вас поки немає улюблених ігор",
+    "emptyFavoritesHint": "Натисніть на серце на сторінці гри, щоб додати її сюди",
+    "emptyWishlist": "Ваш список бажань порожній",
+    "emptyWishlistHint": "Додайте ігри, які хочете придбати пізніше",
+    "browseGames": "Переглянути ігри",
+    "showMore": "Показати ще"
   },
   "chat": {
     "placeholder": "Запитайте про ігри...",
     "title": "AI Асистент",
     "history": "Історія чатів",
     "newChat": "Новий чат",
-    "thinking": "Думаю..."
+    "thinking": "Думаю...",
+    "noChats": "Чатів поки немає",
+    "welcomeTitle": "Привіт! Я ваш ігровий асистент",
+    "welcomeDescription": "Я можу допомогти знайти ігри, дати рекомендації за вашими вподобаннями та відповісти на питання про будь-яку гру в нашому каталозі.",
+    "showingResults": "Знайдено {count} ігор",
+    "notVerified": "Ваш акаунт не верифіковано. Зверніться до адміністратора для отримання доступу до AI асистента."
+  },
+  "discover": {
+    "title": "Рекомендації AI",
+    "continueChat": "Продовжити чат з AI",
+    "noResults": "Ігор не знайдено. Спробуйте запитати інакше."
   },
   "auth": {
     "signInWith": "Увійти через {provider}",
     "signInGoogle": "Увійти через Google",
-    "welcomeBack": "З поверненням!"
+    "welcomeBack": "З поверненням!",
+    "signInRequired": "Необхідно увійти",
+    "signInRequiredDescription": "Увійдіть в акаунт, щоб використовувати цю функцію",
+    "signInToUseAI": "Увійдіть, щоб спілкуватися з AI асистентом",
+    "signInToInteract": "Увійдіть, щоб додавати ігри до улюблених та списку бажань"
   },
   "support": {
     "title": "Підтримка",
     "subtitle": "Потрібна допомога? Зв'яжіться з нами",
+    "formTitle": "Створити звернення",
+    "nameLabel": "Ім'я",
+    "namePlaceholder": "Ваше ім'я",
+    "emailLabel": "Email (необов'язково)",
+    "emailPlaceholder": "ваш@email.com",
+    "subjectLabel": "Тема",
+    "subjectPlaceholder": "Короткий опис вашої проблеми",
+    "typeLabel": "Тип",
+    "priorityLabel": "Пріоритет",
+    "messageLabel": "Повідомлення",
+    "messagePlaceholder": "Опишіть вашу проблему детально...",
+    "submitButton": "Надіслати звернення",
+    "successMessage": "Ваше звернення надіслано! Ми розглянемо його найближчим часом.",
+    "errorMessage": "Не вдалося надіслати звернення. Спробуйте ще раз.",
+    "orTelegram": "або отримайте миттєву допомогу",
     "telegramButton": "Написати в Telegram",
     "contactUs": "Зв'яжіться з нами"
+  },
+  "settings": {
+    "title": "Налаштування",
+    "subtitle": "Керуйте налаштуваннями вашого акаунту",
+    "telegramSection": "Telegram",
+    "telegramDescription": "Прив'яжіть Telegram акаунт для отримання сповіщень про знижки з вашого списку бажань та автоматичного входу в Mini App.",
+    "linkTelegram": "Прив'язати Telegram",
+    "unlinkTelegram": "Відв'язати",
+    "telegramLinked": "Прив'язано до",
+    "telegramLinking": "Очікуємо підтвердження...",
+    "telegramLinkCodeHint": "Надішліть команду нижче нашому Telegram боту, щоб прив'язати акаунт:",
+    "sendLinkCommand": "Надішліть боту:",
+    "copyCode": "Скопіювати команду",
+    "openBot": "Відкрити бота",
+    "linkExpired": "Код застарів. Спробуйте ще раз.",
+    "linkSuccess": "Telegram успішно прив'язано!",
+    "signInRequired": "Увійдіть, щоб отримати доступ до налаштувань"
   },
   "recommendations": {
     "title": "Рекомендації",

@@ -45,7 +45,7 @@ export async function removeFavorite(gameId: string) {
   return { success: true }
 }
 
-export async function getFavorites() {
+export async function getFavorites(locale: string = 'en') {
   const userId = await getUserId()
   const payload = await getPayload({ config })
 
@@ -53,6 +53,7 @@ export async function getFavorites() {
     collection: 'favorites',
     where: { user: { equals: userId } },
     depth: 1,
+    locale: locale as 'en' | 'uk',
     limit: 100,
   })
 
