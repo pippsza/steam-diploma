@@ -1,84 +1,91 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import config from '@payload-config'
-import crypto from 'crypto'
+import { NextRequest, NextResponse } from "next/server";
+import { getPayload } from "payload";
+import config from "@payload-config";
+import crypto from "crypto";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? ''
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
 
 function validateInitData(initData: string): boolean {
-  if (!BOT_TOKEN || !initData) return false
+  if (!BOT_TOKEN || !initData) return false;
 
   try {
-    const params = new URLSearchParams(initData)
-    const hash = params.get('hash')
-    if (!hash) return false
+    const params = new URLSearchParams(initData);
+    const hash = params.get("hash");
+    if (!hash) return false;
 
-    params.delete('hash')
+    params.delete("hash");
     const dataCheckString = Array.from(params.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, val]) => `${key}=${val}`)
-      .join('\n')
+      .join("\n");
 
     const secretKey = crypto
-      .createHmac('sha256', 'WebAppData')
+      .createHmac("sha256", "WebAppData")
       .update(BOT_TOKEN)
-      .digest()
+      .digest();
 
     const computedHash = crypto
-      .createHmac('sha256', secretKey)
+      .createHmac("sha256", secretKey)
       .update(dataCheckString)
-      .digest('hex')
+      .digest("hex");
 
-    return computedHash === hash
+    return computedHash === hash;
   } catch {
-    return false
+    return false;
   }
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json()
-  const { initData } = body as { initData: string }
+  const body = await request.json();
+  const { initData } = body as { initData: string };
 
   if (!initData) {
-    return NextResponse.json({ error: 'initData required' }, { status: 400 })
+    return NextResponse.json({ error: "initData required" }, { status: 400 });
   }
 
   // Validate initData signature
   if (!validateInitData(initData)) {
-    return NextResponse.json({ error: 'Invalid initData' }, { status: 403 })
+    return NextResponse.json({ error: "Invalid initData" }, { status: 403 });
   }
 
   // Parse user info from initData
-  const params = new URLSearchParams(initData)
-  const userJson = params.get('user')
+  const params = new URLSearchParams(initData);
+  const userJson = params.get("user");
   if (!userJson) {
-    return NextResponse.json({ error: 'No user in initData' }, { status: 400 })
+    return NextResponse.json({ error: "No user in initData" }, { status: 400 });
   }
 
-  const tgUser = JSON.parse(userJson) as { id: number; username?: string; first_name?: string }
-  const chatId = String(tgUser.id)
+  const tgUser = JSON.parse(userJson) as {
+    id: number;
+    username?: string;
+    first_name?: string;
+  };
+  const chatId = String(tgUser.id);
 
   // Find user by telegramChatId
-  const payload = await getPayload({ config })
+  const payload = await getPayload({ config });
   const { docs } = await payload.find({
-    collection: 'users',
+    collection: "users",
     where: {
       telegramChatId: { equals: chatId },
       telegramLinked: { equals: true },
     },
     limit: 1,
-  })
+  });
 
   if (docs.length === 0) {
-    return NextResponse.json({
-      error: 'No linked account found',
-      needsLink: true,
-    }, { status: 404 })
+    return NextResponse.json(
+      {
+        error: "No linked account found",
+        needsLink: true,
+      },
+      { status: 404 },
+    );
   }
 
-  const user = docs[0]
+  const user = docs[0];
 
   // Return user info for client-side signIn
   return NextResponse.json({
@@ -88,5 +95,5 @@ export async function POST(request: NextRequest) {
       name: user.name,
       email: user.email,
     },
-  })
+  });
 }

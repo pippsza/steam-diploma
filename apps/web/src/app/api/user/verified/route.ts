@@ -1,18 +1,21 @@
-import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import config from '@payload-config'
-import { auth } from '@/auth'
+import { NextResponse } from "next/server";
+import { getPayload } from "payload";
+import config from "@payload-config";
+import { auth } from "@/auth";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const session = await auth()
+  const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ isVerified: false })
+    return NextResponse.json({ isVerified: false });
   }
 
-  const payload = await getPayload({ config })
-  const user = await payload.findByID({ collection: 'users', id: session.user.id })
+  const payload = await getPayload({ config });
+  const user = await payload.findByID({
+    collection: "users",
+    id: session.user.id,
+  });
 
-  return NextResponse.json({ isVerified: user?.isVerified ?? false })
+  return NextResponse.json({ isVerified: user?.isVerified ?? false });
 }

@@ -1,18 +1,18 @@
-import { getPayload } from 'payload'
-import config from '@payload-config'
-import { TMAHome } from './tma-home'
+import { getPayload } from "payload";
+import config from "@payload-config";
+import { TMAHome } from "./tma-home";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export default async function TMAHomePage() {
-  const payload = await getPayload({ config })
+  const payload = await getPayload({ config });
 
   const popular = await payload.find({
-    collection: 'games',
+    collection: "games",
     limit: 10,
-    sort: '-recommendations.total',
+    sort: "-recommendations.total",
     where: { detailsFetched: { equals: true } },
-  })
+  });
 
-  return <TMAHome games={popular.docs as any} />
+  return <TMAHome games={popular.docs as any} />;
 }

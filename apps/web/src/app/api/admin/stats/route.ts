@@ -1,41 +1,55 @@
-import { getPayload } from 'payload'
-import config from '@payload-config'
-import { auth } from '@/auth'
+import { getPayload } from "payload";
+import config from "@payload-config";
+import { auth } from "@/auth";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const session = await auth()
+  const session = await auth();
   if (!session?.user) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const payload = await getPayload({ config })
+  const payload = await getPayload({ config });
 
-  const now = new Date()
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  const [totalUsers, recentUsers7d, recentUsers30d, totalGames, totalPurchases, totalFavorites, totalWishlist, totalChatSessions] =
-    await Promise.all([
-      payload.count({ collection: 'users' }),
-      payload.count({ collection: 'users', where: { createdAt: { greater_than: sevenDaysAgo.toISOString() } } }),
-      payload.count({ collection: 'users', where: { createdAt: { greater_than: thirtyDaysAgo.toISOString() } } }),
-      payload.count({ collection: 'games' }),
-      payload.count({ collection: 'purchases' }),
-      payload.count({ collection: 'favorites' }),
-      payload.count({ collection: 'wishlist' }),
-      payload.count({ collection: 'chat-sessions' }),
-    ])
+  const [
+    totalUsers,
+    recentUsers7d,
+    recentUsers30d,
+    totalGames,
+    totalPurchases,
+    totalFavorites,
+    totalWishlist,
+    totalChatSessions,
+  ] = await Promise.all([
+    payload.count({ collection: "users" }),
+    payload.count({
+      collection: "users",
+      where: { createdAt: { greater_than: sevenDaysAgo.toISOString() } },
+    }),
+    payload.count({
+      collection: "users",
+      where: { createdAt: { greater_than: thirtyDaysAgo.toISOString() } },
+    }),
+    payload.count({ collection: "games" }),
+    payload.count({ collection: "purchases" }),
+    payload.count({ collection: "favorites" }),
+    payload.count({ collection: "wishlist" }),
+    payload.count({ collection: "chat-sessions" }),
+  ]);
 
   // Most popular games (by purchases)
   const popularGames = await payload.find({
-    collection: 'games',
+    collection: "games",
     where: { detailsFetched: { equals: true } },
-    sort: '-recommendations.total',
+    sort: "-recommendations.total",
     limit: 5,
     select: { name: true, appid: true, recommendations: true },
-  })
+  });
 
   return Response.json({
     users: {
@@ -53,5 +67,5 @@ export async function GET() {
       appid: g.appid,
       recommendations: (g.recommendations as any)?.total ?? 0,
     })),
-  })
+  });
 }
