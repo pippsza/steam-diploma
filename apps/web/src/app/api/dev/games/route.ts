@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
+export const dynamic = 'force-dynamic'
+
 // Dev-only endpoint for debugging games collection
 // GET /api/dev/games?q=Terraria — search by name
 // GET /api/dev/games?appid=105600 — search by appid

@@ -3,6 +3,8 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { streamText, tool, convertToModelMessages, stepCountIs, type LanguageModel } from 'ai'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+
+export const dynamic = 'force-dynamic'
 import { auth } from '@/auth'
 import { ai } from '@/lib/tracked-ai'
 import {

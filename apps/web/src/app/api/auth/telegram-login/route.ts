@@ -3,6 +3,8 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import crypto from 'crypto'
 
+export const dynamic = 'force-dynamic'
+
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? ''
 
 function validateInitData(initData: string): boolean {

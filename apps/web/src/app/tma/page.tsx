@@ -2,6 +2,8 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { TMAHome } from './tma-home'
 
+export const dynamic = 'force-dynamic'
+
 export default async function TMAHomePage() {
   const payload = await getPayload({ config })
 
