@@ -34,8 +34,6 @@ export type ToolAction =
 
 interface ChatContextValue {
   messages: UIMessage[]
-  input: string
-  setInput: (input: string) => void
   sendUserMessage: (text: string) => void
   isLoading: boolean
   isOpen: boolean
@@ -71,7 +69,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const [sessionsLoading, setSessionsLoading] = useState(false)
-  const [input, setInput] = useState('')
   const [toolAction, setToolAction] = useState<ToolAction>(null)
   const processedToolIdsRef = useRef<Set<string>>(new Set())
   const pendingActionRef = useRef<
@@ -82,6 +79,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   const { messages, sendMessage, setMessages, status } = useChat({
     id: currentSessionId ?? undefined,
+    experimental_throttle: 50,
   })
 
   const isLoading = status === 'submitted' || status === 'streaming'
@@ -114,8 +112,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   // Detect tool invocations and trigger navigation.
   // Navigate immediately when tool output is available — don't wait for streaming to finish.
-  // The model may still be generating text after the tool call (multi-step), but the user
-  // should see the result page right away.
   useEffect(() => {
     // Find the most recent unprocessed assistant message with completed tool parts
     const toolAssistant = [...messages].reverse().find((m) => {
@@ -270,7 +266,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const sendUserMessage = useCallback(
     async (text: string) => {
       if (!text.trim()) return
-      setInput('')
       if (!currentSessionId) {
         try {
           const { id, title } = await createChatSession()
@@ -296,8 +291,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     <ChatContext.Provider
       value={{
         messages,
-        input,
-        setInput,
         sendUserMessage,
         isLoading,
         isOpen,

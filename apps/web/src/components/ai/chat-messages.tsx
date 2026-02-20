@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, memo } from 'react'
+import { useRef, useEffect } from 'react'
 import { Bot } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import ReactMarkdown from 'react-markdown'
@@ -24,106 +24,86 @@ const markdownComponents = {
   img: () => null,
 } as const
 
-const MessageItem = memo(
-  function MessageItem({
-    message,
-    t,
-  }: {
-    message: UIMessage
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    t: (key: string, values?: any) => string
-  }) {
-    const text = getMessageText(message)
+function MessageItem({
+  message,
+  t,
+}: {
+  message: UIMessage
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (key: string, values?: any) => string
+}) {
+  const text = getMessageText(message)
 
-    const toolParts = message.parts.filter(
-      (p) => p.type === 'dynamic-tool' || p.type.startsWith('tool-'),
-    )
+  const toolParts = message.parts.filter(
+    (p) => p.type === 'dynamic-tool' || p.type.startsWith('tool-'),
+  )
 
-    if (message.role === 'assistant' && !text && toolParts.length === 0) return null
+  if (message.role === 'assistant' && !text && toolParts.length === 0) return null
 
-    return (
+  return (
+    <div
+      className={cn(
+        'flex',
+        message.role === 'user' ? 'justify-end' : 'justify-start',
+      )}
+      style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 50px' }}
+    >
       <div
         className={cn(
-          'flex',
-          message.role === 'user' ? 'justify-end' : 'justify-start',
+          'max-w-[80%] rounded-2xl px-4 py-2 text-sm wrap-break-word overflow-hidden',
+          message.role === 'user'
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-muted',
         )}
       >
-        <div
-          className={cn(
-            'max-w-[80%] rounded-2xl px-4 py-2 text-sm wrap-break-word overflow-hidden',
-            message.role === 'user'
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted',
-          )}
-        >
-          {text && message.role === 'assistant' ? (
-            <div className="prose prose-sm prose-invert max-w-none wrap-break-word prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2 prose-a:text-primary prose-a:underline prose-strong:text-inherit">
-              <ReactMarkdown components={markdownComponents}>
-                {text}
-              </ReactMarkdown>
-            </div>
-          ) : text ? (
-            <p className="whitespace-pre-wrap">{text}</p>
-          ) : null}
+        {text && message.role === 'assistant' ? (
+          <div className="prose prose-sm prose-invert max-w-none wrap-break-word prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2 prose-a:text-primary prose-a:underline prose-strong:text-inherit">
+            <ReactMarkdown components={markdownComponents}>
+              {text}
+            </ReactMarkdown>
+          </div>
+        ) : text ? (
+          <p className="whitespace-pre-wrap">{text}</p>
+        ) : null}
 
-          {toolParts.map((part, i) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const p = part as any
-            const toolName = p.toolName ?? p.type?.replace('tool-', '')
+        {toolParts.map((part, i) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const p = part as any
+          const toolName = p.toolName ?? p.type?.replace('tool-', '')
 
-            if (p.state === 'output-available' && toolName === 'search_games' && Array.isArray(p.output)) {
-              return (
-                <div key={i} className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Bot className="h-3 w-3" />
-                  <span>{t('showingResults', { count: p.output.length })}</span>
-                </div>
-              )
-            }
+          if (p.state === 'output-available' && toolName === 'search_games' && Array.isArray(p.output)) {
+            return (
+              <div key={i} className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Bot className="h-3 w-3" />
+                <span>{t('showingResults', { count: p.output.length })}</span>
+              </div>
+            )
+          }
 
-            if (p.state === 'output-available' && (toolName === 'open_game' || toolName === 'navigate')) {
-              return (
-                <div key={i} className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Bot className="h-3 w-3" />
-                  <span>{toolName === 'open_game' ? '↗' : '🔍'}</span>
-                </div>
-              )
-            }
+          if (p.state === 'output-available' && (toolName === 'open_game' || toolName === 'navigate')) {
+            return (
+              <div key={i} className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Bot className="h-3 w-3" />
+                <span>{toolName === 'open_game' ? '↗' : '🔍'}</span>
+              </div>
+            )
+          }
 
-            if (p.state && p.state !== 'output-available' && p.state !== 'output-error') {
-              return (
-                <div key={i} className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground animate-pulse">
-                  <Bot className="h-3 w-3" />
-                  <span>{t('thinking')}</span>
-                </div>
-              )
-            }
+          if (p.state && p.state !== 'output-available' && p.state !== 'output-error') {
+            return (
+              <div key={i} className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground animate-pulse">
+                <Bot className="h-3 w-3" />
+                <span>{t('thinking')}</span>
+              </div>
+            )
+          }
 
-            return null
-          })}
-        </div>
+          return null
+        })}
       </div>
-    )
-  },
-  (prev, next) => {
-    if (prev.message.id !== next.message.id) return false
-    if (prev.message.parts.length !== next.message.parts.length) return false
-    const prevText = getMessageText(prev.message)
-    const nextText = getMessageText(next.message)
-    if (prevText !== nextText) return false
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const getToolStates = (m: UIMessage) =>
-      m.parts
-        .filter((p) => p.type === 'dynamic-tool' || p.type.startsWith('tool-'))
-        .map((p) => (p as any).state)
-    const prevStates = getToolStates(prev.message)
-    const nextStates = getToolStates(next.message)
-    if (prevStates.length !== nextStates.length) return false
-    for (let i = 0; i < prevStates.length; i++) {
-      if (prevStates[i] !== nextStates[i]) return false
-    }
-    return true
-  },
-)
+    </div>
+  )
+}
 
 export function ChatMessages() {
   const { messages, isLoading } = useChatContext()

@@ -3,10 +3,9 @@
 import { MessageCircle, Send, X, Plus, Trash2, History } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChatContext, type ChatSession } from "./chat-provider";
 import { ChatMessages } from "./chat-messages";
@@ -63,7 +62,7 @@ function ChatHistorySidebar({
                   "group flex items-center gap-1 rounded-lg px-2 py-2 text-sm cursor-pointer transition-colors",
                   s.id === currentSessionId
                     ? "bg-primary/10 text-primary"
-                    : "hover:bg-muted"
+                    : "hover:bg-muted",
                 )}
                 onClick={() => {
                   switchSession(s.id);
@@ -96,8 +95,6 @@ export function ChatInputBar() {
   const t = useTranslations("chat");
   const tAuth = useTranslations("auth");
   const {
-    input,
-    setInput,
     sendUserMessage,
     isOpen,
     open,
@@ -111,7 +108,7 @@ export function ChatInputBar() {
     sessionsLoading,
   } = useChatContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isAuthenticated = !!session?.user;
   const [isVerified, setIsVerified] = useState(false);
@@ -128,11 +125,11 @@ export function ChatInputBar() {
       .catch(() => setIsVerified(false));
   }, [session?.user?.id]);
 
-  // Auto-focus input when chat opens + lock body scroll + ESC to close
+  // Auto-focus textarea when chat opens + lock body scroll + ESC to close
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
-      const timer = setTimeout(() => inputRef.current?.focus(), 200);
+      const timer = setTimeout(() => textareaRef.current?.focus(), 200);
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") close();
       };
@@ -145,13 +142,42 @@ export function ChatInputBar() {
     }
   }, [isOpen, close]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Auto-resize textarea as user types
+  const autoResize = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 120) + "px"; // max ~5 lines
+  }, []);
+
+  const handleSubmit = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const text = el.value.trim();
+    if (!text || isLoading) return;
     if (!isAuthenticated) {
       open();
       return;
     }
-    sendUserMessage(input);
+    sendUserMessage(text);
+    el.value = "";
+    el.style.height = "auto";
+  }, [isLoading, isAuthenticated, open, sendUserMessage]);
+
+  // Enter = send, Ctrl+Enter / Shift+Enter = newline
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey) {
+        e.preventDefault();
+        handleSubmit();
+      }
+    },
+    [handleSubmit],
+  );
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSubmit();
   };
 
   const sidebarProps = {
@@ -178,7 +204,10 @@ export function ChatInputBar() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}
+              whileHover={{
+                scale: 1.05,
+                boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+              }}
               whileTap={{ scale: 0.95 }}
             >
               <MessageCircle className="h-5 w-5 text-primary" />
@@ -241,7 +270,11 @@ export function ChatInputBar() {
                         initial={{ x: "-100%" }}
                         animate={{ x: 0 }}
                         exit={{ x: "-100%" }}
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 30,
+                        }}
                       >
                         <ChatHistorySidebar
                           {...sidebarProps}
@@ -299,24 +332,22 @@ export function ChatInputBar() {
                     )}
                   </div>
 
-                  {/* Input */}
+                  {/* Input — uncontrolled textarea */}
                   {isAuthenticated && isVerified && (
                     <form
-                      onSubmit={handleSubmit}
-                      className="flex items-center gap-2 border-t p-3"
+                      onSubmit={handleFormSubmit}
+                      className="flex items-center gap-2 border-t p-3 "
                     >
-                      <Input
-                        ref={inputRef}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
+                      <textarea
+                        ref={textareaRef}
+                        rows={1}
                         placeholder={t("placeholder")}
-                        className="flex-1 border-0 bg-transparent focus-visible:ring-0"
+                        onKeyDown={handleKeyDown}
+                        onInput={autoResize}
+                        className="flex-1 resize-none bg-transparent text-sm leading-5 outline-none placeholder:text-muted-foreground scrollbar-none"
+                        style={{ maxHeight: 120 }}
                       />
-                      <Button
-                        type="submit"
-                        size="icon"
-                        disabled={!input.trim() || isLoading}
-                      >
+                      <Button type="submit" size="icon" disabled={isLoading}>
                         <Send className="h-4 w-4" />
                       </Button>
                     </form>
