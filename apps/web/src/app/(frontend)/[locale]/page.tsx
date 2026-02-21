@@ -1,40 +1,42 @@
-import { getTranslations } from 'next-intl/server'
-import { getPayload } from 'payload'
-import config from '@payload-config'
-import { GameGrid } from '@/components/games/game-grid'
-import { PageTransition } from '@/components/layout/page-transition'
+import { getTranslations } from "next-intl/server";
+import { getPayload } from "payload";
+import config from "@payload-config";
+import { GameGrid } from "@/components/games/game-grid";
+import { PageTransition } from "@/components/layout/page-transition";
+
+export const dynamic = "force-dynamic";
 
 interface Props {
-  params: Promise<{ locale: string }>
+  params: Promise<{ locale: string }>;
 }
 
 export default async function HomePage({ params }: Props) {
-  const { locale } = await params
-  const t = await getTranslations('home')
+  const { locale } = await params;
+  const t = await getTranslations("home");
 
-  const payload = await getPayload({ config })
+  const payload = await getPayload({ config });
 
   const popular = await payload.find({
-    collection: 'games',
+    collection: "games",
     where: { detailsFetched: { equals: true } },
-    sort: '-recommendations.total',
-    locale: locale as 'en' | 'uk',
+    sort: "-recommendations.total",
+    locale: locale as "en" | "uk",
     limit: 8,
-  })
+  });
 
   const recent = await payload.find({
-    collection: 'games',
+    collection: "games",
     where: { detailsFetched: { equals: true } },
-    sort: '-createdAt',
-    locale: locale as 'en' | 'uk',
+    sort: "-createdAt",
+    locale: locale as "en" | "uk",
     limit: 8,
-  })
+  });
 
   return (
     <PageTransition className="container space-y-12 py-8">
       <section className="text-center">
-        <h1 className="text-4xl font-bold">{t('title')}</h1>
-        <p className="mt-2 text-lg text-muted-foreground">{t('hero')}</p>
+        <h1 className="text-4xl font-bold">{t("title")}</h1>
+        <p className="mt-2 text-lg text-muted-foreground">{t("hero")}</p>
       </section>
 
       {popular.docs.length > 0 && (
@@ -51,5 +53,5 @@ export default async function HomePage({ params }: Props) {
         </section>
       )}
     </PageTransition>
-  )
+  );
 }

@@ -25,6 +25,11 @@ ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Create .env from build args (.env is in .dockerignore but web build script uses dotenv)
+RUN echo "PAYLOAD_SECRET=$PAYLOAD_SECRET" > .env && \
+    echo "DATABASE_URI=$DATABASE_URI" >> .env && \
+    echo "NEXT_PUBLIC_SERVER_URL=$NEXT_PUBLIC_SERVER_URL" >> .env
+
 # Сборка пакетов монорепозитория
 RUN pnpm --filter @steam-diploma/ai build 2>/dev/null || true
 RUN pnpm --filter web build
