@@ -10,6 +10,14 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+
+    # MongoDB потрібна для Payload CMS під час next build
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+
     steps:
       - uses: actions/checkout@v4
 
@@ -21,6 +29,8 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
 
       - name: Build and push web
         uses: docker/build-push-action@v6
@@ -28,11 +38,11 @@ jobs:
           context: .
           file: Dockerfile.web
           push: true
-          # Передаем секреты внутрь Docker Build
+          network: host
           build-args: |
             PAYLOAD_SECRET=${{ secrets.PAYLOAD_SECRET }}
-            DATABASE_URI=${{ secrets.DATABASE_URI }}
-            NEXT_PUBLIC_SERVER_URL=${{ secrets.NEXT_PUBLIC_SERVER_URL }}
+            MONGODB_URI=mongodb://localhost:27017/steam_build
+            NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
           tags: |
             ${{ env.IMAGE_PREFIX }}-web:latest
             ${{ env.IMAGE_PREFIX }}-web:${{ github.sha }}
