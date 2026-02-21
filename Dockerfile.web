@@ -13,12 +13,12 @@ RUN pnpm install --frozen-lockfile
 FROM base AS builder
 # Принимаем аргументы сборки (обязательно для Next.js + Payload)
 ARG PAYLOAD_SECRET
-ARG DATABASE_URI
-ARG NEXT_PUBLIC_SERVER_URL
+ARG MONGODB_URI
+ARG NEXT_PUBLIC_APP_URL
 
 ENV PAYLOAD_SECRET=$PAYLOAD_SECRET
-ENV DATABASE_URI=$DATABASE_URI
-ENV NEXT_PUBLIC_SERVER_URL=$NEXT_PUBLIC_SERVER_URL
+ENV MONGODB_URI=$MONGODB_URI
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
@@ -27,8 +27,8 @@ COPY . .
 
 # Create .env from build args (.env is in .dockerignore but web build script uses dotenv)
 RUN echo "PAYLOAD_SECRET=$PAYLOAD_SECRET" > .env && \
-    echo "DATABASE_URI=$DATABASE_URI" >> .env && \
-    echo "NEXT_PUBLIC_SERVER_URL=$NEXT_PUBLIC_SERVER_URL" >> .env
+    echo "MONGODB_URI=$MONGODB_URI" >> .env && \
+    echo "NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL" >> .env
 
 # Сборка пакетов монорепозитория
 RUN pnpm --filter @steam-diploma/ai build 2>/dev/null || true

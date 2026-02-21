@@ -3,6 +3,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.web
+      args:
+        PAYLOAD_SECRET: ${PAYLOAD_SECRET}
+        MONGODB_URI: ${MONGODB_URI}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
     ports:
       - "3100:3000"
     env_file: .env
@@ -13,4 +17,8 @@ services:
       context: .
       dockerfile: Dockerfile.bot
     env_file: .env
+    environment:
+      - PAYLOAD_API_URL=http://web:3000/api
+    depends_on:
+      - web
     restart: unless-stopped
