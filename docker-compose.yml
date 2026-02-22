@@ -1,16 +1,14 @@
 services:
   web:
-    image: ${DOCKERHUB_USERNAME}/steam-diploma-web:latest
+    image: pippsza/steam-diploma-web:latest
     ports:
-      - "3100:3000"
+      - "3984:3000"
     env_file: .env
     restart: unless-stopped
 
   bot:
-    image: ${DOCKERHUB_USERNAME}/steam-diploma-bot:latest
+    image: pippsza/steam-diploma-bot:latest
     env_file: .env
-    environment:
-      - PAYLOAD_API_URL=http://web:3000/api
     depends_on:
       - web
     restart: unless-stopped
