@@ -26,8 +26,7 @@ RUN addgroup --system --gid 1001 botuser && \
     adduser --system --uid 1001 botuser
 
 COPY --from=builder /app/apps/bot/dist ./dist
-COPY --from=builder /app/apps/bot/node_modules ./node_modules
-COPY --from=deps /app/node_modules ./root_modules
+COPY --from=deps /app/node_modules ./node_modules
 
 USER botuser
 
