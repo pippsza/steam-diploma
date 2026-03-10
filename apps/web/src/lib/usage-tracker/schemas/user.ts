@@ -22,7 +22,7 @@ const userSchema = new Schema(
     // Будь-які додаткові мета-поля від проєкту
     meta: { type: Schema.Types.Mixed, default: {} },
 
-    // Статистика (оновлює UsageHub aggregation)
+    // Статистика (оновлює ZenCore aggregation)
     lastActivityAt: Date,
     totalRequests: { type: Number, default: 0 },
     totalTokens: { type: Number, default: 0 },

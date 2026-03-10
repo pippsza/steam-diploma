@@ -1,9 +1,10 @@
-import { getTokenUsageEventModel } from './connection'
+import { getTokenUsageEventModel, getModelPricingModel } from './connection'
 import { calculateCost, loadPricingFromDb } from './pricing'
 import { registerProject, syncUser } from './registry'
-import type { TrackerConfig, UsageEvent } from './types'
+import type { TrackerConfig, UsageEvent, AvailableModel, PricingType } from './types'
 
 const USER_SYNC_DEBOUNCE_MS = 60_000
+const MAX_BUFFER_SIZE = 10_000
 
 class UsageTracker {
   private buffer: UsageEvent[] = []
@@ -35,7 +36,8 @@ class UsageTracker {
       ...event,
       projectId: this.config.projectId,
       environment: this.config.environment,
-      provider: event.provider ?? 'openrouter',
+      provider: event.provider ?? 'openai',
+      unitType: event.unitType ?? 'token',
       isStreaming: event.isStreaming ?? false,
       traceId: event.traceId ?? crypto.randomUUID(),
     }
@@ -85,10 +87,15 @@ class UsageTracker {
       for (const event of events) {
         ;(event as unknown as Record<string, unknown>).estimatedCostUsd = calculateCost(
           event.model,
-          event.inputTokens,
-          event.outputTokens,
-          event.cachedTokens,
-          event.reasoningTokens,
+          {
+            unitType: event.unitType,
+            inputTokens: event.inputTokens,
+            outputTokens: event.outputTokens,
+            cachedTokens: event.cachedTokens,
+            reasoningTokens: event.reasoningTokens,
+            durationSeconds: event.durationSeconds,
+            characters: event.characters,
+          },
           pricingMap,
         )
       }
@@ -98,14 +105,72 @@ class UsageTracker {
     } catch (error) {
       // Повернути невідправлені в буфер
       this.buffer.unshift(...events)
+      if (this.buffer.length > MAX_BUFFER_SIZE) {
+        console.error(`[UsageTracker] Buffer overflow (${this.buffer.length}), trimming to ${MAX_BUFFER_SIZE}`)
+        this.buffer = this.buffer.slice(-MAX_BUFFER_SIZE)
+      }
       console.error('[UsageTracker] Flush failed:', (error as Error).message)
     }
+  }
+
+  async getAvailableModels(): Promise<AvailableModel[]> {
+    return getAvailableModels()
   }
 
   async shutdown(): Promise<void> {
     if (this.flushTimer) clearInterval(this.flushTimer)
     await this.flush()
   }
+}
+
+/**
+ * Завантажує список доступних моделей з бази usage.
+ * Повертає тільки активні записи (effectiveTo = null або > now).
+ * Для кожної моделі бере найновішу ціну за effectiveFrom.
+ * Можна використовувати без інстансу трекера — достатньо USAGE_DATABASE_URI.
+ */
+export async function getAvailableModels(): Promise<AvailableModel[]> {
+  const Model = getModelPricingModel()
+  const now = new Date()
+
+  const docs = await Model.find({
+    effectiveFrom: { $lte: now },
+    $or: [{ effectiveTo: null }, { effectiveTo: { $exists: false } }, { effectiveTo: { $gt: now } }],
+  })
+    .sort({ effectiveFrom: -1 })
+    .lean()
+
+  // Дедуплікація: для кожної моделі беремо тільки першу (найновішу)
+  const seen = new Set<string>()
+  const result: AvailableModel[] = []
+
+  for (const doc of docs) {
+    const key = String(doc.model)
+    if (seen.has(key)) continue
+    seen.add(key)
+
+    result.push({
+      model: key,
+      provider: String(doc.provider),
+      pricingType: ((doc.pricingType as string | undefined) ?? 'per_token') as PricingType,
+      displayName: doc.displayName ? String(doc.displayName) : undefined,
+      description: doc.description ? String(doc.description) : undefined,
+      contextLength: doc.contextLength as number | undefined,
+      inputPricePerMillionTokens: doc.inputPricePerMillionTokens as number | undefined,
+      outputPricePerMillionTokens: doc.outputPricePerMillionTokens as number | undefined,
+      cachedInputPricePerMillionTokens: doc.cachedInputPricePerMillionTokens as number | undefined,
+      reasoningPricePerMillionTokens: doc.reasoningPricePerMillionTokens as number | undefined,
+      pricePerMinute: doc.pricePerMinute as number | undefined,
+      includedMinutesPerMonth: doc.includedMinutesPerMonth as number | undefined,
+      additionalPricePerMinute: doc.additionalPricePerMinute as number | undefined,
+      pricePerMillionCharacters: doc.pricePerMillionCharacters as number | undefined,
+      supportsVision: Boolean(doc.supportsVision),
+      supportsToolCalling: Boolean(doc.supportsToolCalling),
+      supportsReasoning: Boolean(doc.supportsReasoning),
+    })
+  }
+
+  return result
 }
 
 export function createUsageTracker(config: TrackerConfig): UsageTracker {

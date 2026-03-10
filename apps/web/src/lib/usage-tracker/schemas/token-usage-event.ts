@@ -35,8 +35,8 @@ const tokenUsageEventSchema = new Schema(
     provider: {
       type: String,
       required: true,
-      enum: ['openrouter', 'openai', 'anthropic', 'google', 'custom'],
-      default: 'openrouter',
+      enum: ['openai', 'anthropic', 'google', 'elevenlabs', 'openrouter', 'custom'],
+      default: 'openai',
     },
     model: {
       type: String,
@@ -45,12 +45,25 @@ const tokenUsageEventSchema = new Schema(
     },
     modelGroup: String,
 
-    // ── Токени ──
-    inputTokens: { type: Number, required: true, min: 0 },
-    outputTokens: { type: Number, required: true, min: 0 },
-    totalTokens: { type: Number, required: true, min: 0 },
+    // ── Тип одиниці обліку ──
+    unitType: {
+      type: String,
+      enum: ['token', 'minute', 'character'],
+      default: 'token',
+    },
+
+    // ── Токени (для unitType: 'token') ──
+    inputTokens: { type: Number, min: 0 },
+    outputTokens: { type: Number, min: 0 },
+    totalTokens: { type: Number, min: 0 },
     cachedTokens: { type: Number, min: 0 },
     reasoningTokens: { type: Number, min: 0 },
+
+    // ── Тривалість (для unitType: 'minute') ──
+    durationSeconds: { type: Number, min: 0 },
+
+    // ── Символи (для unitType: 'character') ──
+    characters: { type: Number, min: 0 },
 
     // ── Вартість ──
     estimatedCostUsd: { type: Number, required: true, min: 0 },

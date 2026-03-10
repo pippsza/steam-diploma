@@ -23,25 +23,31 @@ export function getUsageConnection(): mongoose.Connection {
 }
 
 export function getTokenUsageEventModel() {
-  return getUsageConnection().model('TokenUsageEvent', tokenUsageEventSchema)
+  const conn = getUsageConnection()
+  return conn.models['TokenUsageEvent'] || conn.model('TokenUsageEvent', tokenUsageEventSchema)
 }
 
 export function getModelPricingModel() {
-  return getUsageConnection().model('ModelPricing', modelPricingSchema)
+  const conn = getUsageConnection()
+  return conn.models['ModelPricing'] || conn.model('ModelPricing', modelPricingSchema)
 }
 
 export function getProjectModel() {
-  return getUsageConnection().model('Project', projectSchema)
+  const conn = getUsageConnection()
+  return conn.models['Project'] || conn.model('Project', projectSchema)
 }
 
 export function getUserModel() {
-  return getUsageConnection().model('User', userSchema)
+  const conn = getUsageConnection()
+  return conn.models['User'] || conn.model('User', userSchema)
 }
 
 export function getUsageSummaryModel() {
-  return getUsageConnection().model('UsageSummary', usageSummarySchema)
+  const conn = getUsageConnection()
+  return conn.models['UsageSummary'] || conn.model('UsageSummary', usageSummarySchema)
 }
 
 export function getProviderCostModel() {
-  return getUsageConnection().model('ProviderCost', providerCostSchema)
+  const conn = getUsageConnection()
+  return conn.models['ProviderCost'] || conn.model('ProviderCost', providerCostSchema)
 }

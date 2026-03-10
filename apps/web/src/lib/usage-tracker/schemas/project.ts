@@ -19,7 +19,7 @@ const projectSchema = new Schema(
     team: String,
     contactEmail: String,
 
-    // Статистика (оновлює UsageHub aggregation)
+    // Статистика (оновлює ZenCore aggregation)
     lastActivityAt: Date,
     totalRequestsAllTime: { type: Number, default: 0 },
     totalCostAllTimeUsd: { type: Number, default: 0 },

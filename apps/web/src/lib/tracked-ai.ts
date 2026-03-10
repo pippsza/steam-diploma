@@ -1,8 +1,10 @@
 import { createUsageTracker, createTrackedAI } from './usage-tracker'
 
-const tracker = createUsageTracker({
+// ── Ініціалізація трекера ──────────────────────────────────────────
+
+export const usageTracker = createUsageTracker({
   projectId: 'steam-diploma',
-  environment: (process.env.NODE_ENV as 'production' | 'development') ?? 'development',
+  environment: (process.env.NODE_ENV as 'production' | 'staging' | 'development') ?? 'development',
   buffer: {
     maxSize: 20,
     flushIntervalMs: 10_000,
@@ -15,5 +17,8 @@ const tracker = createUsageTracker({
   },
 })
 
-export const ai = createTrackedAI(tracker)
-export { tracker }
+export const ai = createTrackedAI(usageTracker)
+
+// ── Graceful shutdown ──────────────────────────────────────────────
+
+process.on('beforeExit', () => usageTracker.shutdown())

@@ -5,7 +5,7 @@ const providerCostSchema = new Schema(
     provider: {
       type: String,
       required: true,
-      enum: ['openrouter', 'openai', 'anthropic', 'google'],
+      enum: ['openai', 'anthropic', 'google'],
     },
     periodStart: { type: Date, required: true },
     periodEnd: { type: Date, required: true },
