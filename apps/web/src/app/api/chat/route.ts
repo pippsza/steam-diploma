@@ -156,6 +156,7 @@ User's library (purchased): ${library.length > 0 ? library.join(", ") : "none ye
     },
   };
 
+  const startTime = new Date();
   const result = streamText({
     model,
     system: systemMessage,
@@ -164,7 +165,7 @@ User's library (purchased): ${library.length > 0 ? library.join(", ") : "none ye
     maxOutputTokens: 1024,
     stopWhen: stepCountIs(3),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onFinish: ai.onStreamFinish(modelId, trackingCtx) as any,
+    onFinish: ai.onStreamFinish(modelId, trackingCtx, startTime) as any,
     tools: {
       search_games: tool({
         ...searchGamesToolSchema,

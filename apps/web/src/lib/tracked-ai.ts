@@ -1,4 +1,4 @@
-import { createUsageTracker, createTrackedAI } from './usage-tracker'
+import { createUsageTracker, createTrackedAI } from '@pippsza/usage-tracker'
 
 // ── Ініціалізація трекера ──────────────────────────────────────────
 
