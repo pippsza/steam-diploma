@@ -150,6 +150,7 @@ User's library (purchased): ${library.length > 0 ? library.join(", ") : "none ye
     userId: session.user.id,
     operationType: "chat",
     endpoint: "/api/chat",
+    ...(!isPaid && { provider: "google" as const }),
     user: {
       email: session.user.email ?? undefined,
       name: session.user.name ?? undefined,
