@@ -26,6 +26,11 @@ export const Purchases: CollectionConfig = {
       defaultValue: 0,
       admin: { description: 'Price in cents (mock)' },
     },
+    {
+      name: 'activationKey',
+      type: 'text',
+      admin: { description: 'Mock CD key in XXXXX-XXXXX-XXXXX format' },
+    },
   ],
   indexes: [
     { fields: ['user', 'game'], unique: true },

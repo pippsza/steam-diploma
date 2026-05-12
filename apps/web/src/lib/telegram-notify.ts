@@ -1,4 +1,5 @@
 import type { Payload } from 'payload'
+import { formatPrice } from './game-status'
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? ''
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
@@ -90,20 +91,21 @@ export async function notifyWishlistDiscount(
   game: {
     name?: string
     appid?: number
-    price?: { initial?: number; final?: number; discountPercent?: number }
+    price?: { initial?: number; final?: number; currency?: string; discountPercent?: number }
   },
 ) {
   if (!BOT_TOKEN) return
 
-  const priceFinal = game.price?.final ? (game.price.final / 100).toFixed(2) : '?'
-  const priceInitial = game.price?.initial ? (game.price.initial / 100).toFixed(2) : '?'
+  const currency = game.price?.currency ?? null
+  const priceFinal = game.price?.final ? formatPrice(game.price.final, currency) : '?'
+  const priceInitial = game.price?.initial ? formatPrice(game.price.initial, currency) : '?'
   const discount = game.price?.discountPercent ?? 0
 
   const text = [
     `🎮 <b>Wishlist Sale!</b>`,
     '',
     `<b>${game.name ?? 'Unknown Game'}</b> is now on sale!`,
-    `💰 <s>$${priceInitial}</s> → <b>$${priceFinal}</b> (-${discount}%)`,
+    `💰 <s>${priceInitial}</s> → <b>${priceFinal}</b> (-${discount}%)`,
     '',
     `<a href="${APP_URL}/en/games/${game.appid}">View Game</a>`,
   ].join('\n')

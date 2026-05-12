@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react'
 import Image from 'next/image'
-import { ThumbsUp, ThumbsDown, Clock } from 'lucide-react'
+import { ThumbsUp, ThumbsDown, Clock, Check } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
 import { getSteamHeaderImage } from '@/lib/steam'
+import { formatPrice, getGameAvailability } from '@/lib/game-status'
 import { ScreenshotGallery } from '@/components/games/screenshot-gallery'
 
 interface RequirementsGroup {
@@ -32,6 +34,8 @@ interface GameDetailProps {
   aboutTheGame?: string | null
   supportedLanguages?: string | null
   isFree?: boolean | null
+  comingSoon?: boolean | null
+  isOwned?: boolean | null
   price?: {
     currency?: string | null
     initial?: number | null
@@ -94,6 +98,8 @@ export function GameDetail({
   aboutTheGame,
   supportedLanguages,
   isFree,
+  comingSoon,
+  isOwned,
   price,
   genres,
   developers,
@@ -110,13 +116,20 @@ export function GameDetail({
   locale = 'en',
   children,
 }: GameDetailProps) {
+  const t = useTranslations('games')
   const imageUrl = headerImage || getSteamHeaderImage(appid)
 
-  const displayPrice = isFree
-    ? 'Free'
-    : price?.final
-      ? `$${(price.final / 100).toFixed(2)}`
-      : 'N/A'
+  const availability = getGameAvailability({ isOwned, isFree, comingSoon, price })
+  const displayPrice =
+    availability.kind === 'owned'
+      ? t('inLibrary')
+      : availability.kind === 'free'
+        ? t('free')
+        : availability.kind === 'paid'
+          ? formatPrice(availability.cents, availability.currency)
+          : availability.kind === 'comingSoon'
+            ? t('comingSoon')
+            : t('unavailable')
 
   const hasRequirements =
     pcRequirements?.minimum || pcRequirements?.recommended ||
@@ -158,10 +171,25 @@ export function GameDetail({
           </div>
         </div>
         <div className="text-right">
-          {price?.discountPercent ? (
-            <Badge className="mb-1 bg-green-600 text-lg">-{price.discountPercent}%</Badge>
+          {availability.kind === 'paid' && availability.discountPercent ? (
+            <Badge className="mb-1 bg-green-600 text-lg">-{availability.discountPercent}%</Badge>
           ) : null}
-          <p className="text-2xl font-bold">{displayPrice}</p>
+          {availability.kind === 'owned' ? (
+            <p className="inline-flex items-center gap-1.5 text-lg font-medium text-green-500">
+              <Check className="size-5" />
+              {displayPrice}
+            </p>
+          ) : (
+            <p
+              className={
+                availability.kind === 'paid' || availability.kind === 'free'
+                  ? 'text-2xl font-bold'
+                  : 'text-lg font-medium text-muted-foreground'
+              }
+            >
+              {displayPrice}
+            </p>
+          )}
         </div>
       </div>
 
@@ -171,16 +199,22 @@ export function GameDetail({
       <Separator />
 
       {/* Description */}
-      {shortDescription && <p className="text-muted-foreground">{shortDescription}</p>}
+      {shortDescription && (
+        <p className="font-(family-name:--font-inter) text-base leading-[1.7] text-muted-foreground">
+          {shortDescription}
+        </p>
+      )}
 
       {/* About the Game */}
       {aboutTheGame && (
         <>
           <Separator />
-          <div>
-            <h2 className="mb-3 text-lg font-semibold">About the Game</h2>
-            <p className="whitespace-pre-line text-sm text-muted-foreground">{aboutTheGame}</p>
-          </div>
+          <section className="space-y-6 font-(family-name:--font-inter)">
+            <h2 className="text-2xl font-semibold leading-normal md:text-3xl">About the Game</h2>
+            <p className="whitespace-pre-line text-base leading-[1.7] text-muted-foreground">
+              {aboutTheGame}
+            </p>
+          </section>
         </>
       )}
 

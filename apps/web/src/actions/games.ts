@@ -24,6 +24,7 @@ function mapDetailsToData(details: SteamAppDetails) {
     categories: details.categories?.map((c) => ({ categoryId: String(c.id), description: c.description })) ?? [],
     screenshots: details.screenshots?.map((s) => ({ url: s.path_full, thumbnailUrl: s.path_thumbnail })) ?? [],
     releaseDate: details.release_date?.date ?? '',
+    comingSoon: details.release_date?.coming_soon ?? false,
     price: details.price_overview
       ? {
           currency: details.price_overview.currency,
@@ -199,6 +200,30 @@ export async function getGameByAppId(appid: number, locale: string = 'en') {
   }
 
   return game ?? null
+}
+
+export async function getRandomGameAppId(): Promise<number | null> {
+  const payload = await getPayload({ config })
+
+  // Count fetched games, pick a random offset, fetch one doc — avoids loading the full collection.
+  const total = await payload.count({
+    collection: 'games',
+    where: { detailsFetched: { equals: true } },
+  })
+  if (!total.totalDocs) return null
+
+  const randomPage = Math.floor(Math.random() * total.totalDocs) + 1
+  const result = await payload.find({
+    collection: 'games',
+    where: { detailsFetched: { equals: true } },
+    locale: 'en',
+    limit: 1,
+    page: randomPage,
+    select: { appid: true },
+  })
+
+  const doc = result.docs[0] as { appid?: number } | undefined
+  return doc?.appid ?? null
 }
 
 export async function searchGames(query: string, filters?: {

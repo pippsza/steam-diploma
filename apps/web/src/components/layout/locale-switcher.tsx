@@ -13,7 +13,7 @@ export function LocaleSwitcher() {
 
   const handleSwitch = () => {
     const nextLocale = locale === 'uk' ? 'en' : 'uk'
-    const segments = pathname.split('/')
+    const segments = (pathname ?? '/').split('/')
 
     const localeIndex = segments.findIndex((s) => routing.locales.includes(s as 'uk' | 'en'))
     if (localeIndex !== -1) {

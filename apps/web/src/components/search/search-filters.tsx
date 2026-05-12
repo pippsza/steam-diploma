@@ -1,11 +1,13 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRouter, useSearchParams, useParams } from 'next/navigation'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
+import { Dices } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { getRandomGameAppId } from '@/actions/games'
 
 const GENRES = [
   'Action',
@@ -39,12 +41,22 @@ interface SearchFiltersProps {
 export function SearchFilters({ currentQuery, currentGenre, currentFree, currentPlatform, currentHasReqs }: SearchFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const params = useParams<{ locale: string }>()
+  const locale = params?.locale ?? 'en'
   const [query, setQuery] = useState(currentQuery ?? '')
+  const [isRandomPending, startRandom] = useTransition()
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleRandom = () => {
+    startRandom(async () => {
+      const appid = await getRandomGameAppId()
+      if (appid) router.push(`/${locale}/games/${appid}`, { scroll: false })
+    })
+  }
 
   const updateParams = useCallback(
     (key: string, value: string | null) => {
-      const params = new URLSearchParams(searchParams.toString())
+      const params = new URLSearchParams(searchParams?.toString() ?? '')
       if (value) {
         params.set(key, value)
       } else {
@@ -141,6 +153,19 @@ export function SearchFilters({ currentQuery, currentGenre, currentFree, current
           Has PC Requirements
         </Button>
       </div>
+
+      <Separator />
+
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full gap-2"
+        onClick={handleRandom}
+        disabled={isRandomPending}
+      >
+        <Dices className={`size-4 ${isRandomPending ? 'animate-spin' : ''}`} />
+        {isRandomPending ? 'Picking...' : 'Random Game'}
+      </Button>
 
       {(currentQuery || currentGenre || currentFree || currentPlatform || currentHasReqs) && (
         <>

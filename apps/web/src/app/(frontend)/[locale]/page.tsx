@@ -3,6 +3,7 @@ import { getPayload } from "payload";
 import config from "@payload-config";
 import { GameGrid } from "@/components/games/game-grid";
 import { PageTransition } from "@/components/layout/page-transition";
+import { getOwnedGameIds } from "@/actions/purchases";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,8 @@ export default async function HomePage({ params }: Props) {
     limit: 8,
   });
 
+  const ownedIds = await getOwnedGameIds();
+
   return (
     <PageTransition className="container space-y-12 py-8">
       <section className="text-center">
@@ -42,14 +45,14 @@ export default async function HomePage({ params }: Props) {
       {popular.docs.length > 0 && (
         <section>
           <h2 className="mb-4 text-2xl font-semibold">Popular Games</h2>
-          <GameGrid games={popular.docs as any} />
+          <GameGrid games={popular.docs as any} ownedIds={ownedIds} />
         </section>
       )}
 
       {recent.docs.length > 0 && (
         <section>
           <h2 className="mb-4 text-2xl font-semibold">Recently Added</h2>
-          <GameGrid games={recent.docs as any} />
+          <GameGrid games={recent.docs as any} ownedIds={ownedIds} />
         </section>
       )}
     </PageTransition>

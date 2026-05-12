@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { getSteamHeaderImage } from '@/lib/steam'
+import { formatPrice, getGameAvailability } from '@/lib/game-status'
 import { hapticFeedback, closeMiniApp } from '@/lib/tma'
 
 interface Game {
@@ -12,6 +13,7 @@ interface Game {
   headerImage?: string | null
   shortDescription?: string | null
   isFree?: boolean | null
+  comingSoon?: boolean | null
   price?: {
     currency?: string | null
     final?: number | null
@@ -34,11 +36,20 @@ interface Game {
 export function TMAGameDetail({ game }: { game: Game }) {
   const imageUrl = game.headerImage || getSteamHeaderImage(game.appid)
 
-  const displayPrice = game.isFree
-    ? 'Free'
-    : game.price?.final
-      ? `$${(game.price.final / 100).toFixed(2)}`
-      : 'N/A'
+  const availability = getGameAvailability({
+    isFree: game.isFree,
+    comingSoon: game.comingSoon,
+    price: game.price,
+  })
+  const displayPrice =
+    availability.kind === 'free'
+      ? 'Free'
+      : availability.kind === 'paid'
+        ? formatPrice(availability.cents, availability.currency)
+        : availability.kind === 'comingSoon'
+          ? 'Coming Soon'
+          : 'Unavailable'
+  const canBuy = availability.kind === 'free' || availability.kind === 'paid'
 
   return (
     <div className="space-y-4 pb-8">
@@ -76,7 +87,9 @@ export function TMAGameDetail({ game }: { game: Game }) {
       </div>
 
       {game.shortDescription && (
-        <p className="text-sm text-muted-foreground">{game.shortDescription}</p>
+        <p className="font-(family-name:--font-inter) text-base leading-[1.7] text-muted-foreground">
+          {game.shortDescription}
+        </p>
       )}
 
       <div className="grid grid-cols-2 gap-2 text-sm">
@@ -134,12 +147,18 @@ export function TMAGameDetail({ game }: { game: Game }) {
       <Button
         className="w-full"
         size="lg"
+        disabled={!canBuy}
         onClick={() => {
+          if (!canBuy) return
           hapticFeedback('notification')
           closeMiniApp()
         }}
       >
-        {game.isFree ? 'Get Game' : `Buy for ${displayPrice}`}
+        {availability.kind === 'free'
+          ? 'Get Game'
+          : availability.kind === 'paid'
+            ? `Buy for ${displayPrice}`
+            : displayPrice}
       </Button>
     </div>
   )

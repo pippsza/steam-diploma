@@ -3,9 +3,11 @@ import { notFound } from "next/navigation";
 import { getGameByAppId } from "@/actions/games";
 import { isFavorite } from "@/actions/favorites";
 import { isWishlisted } from "@/actions/wishlist";
-import { isOwned } from "@/actions/purchases";
+import { isOwned, getActivationKey } from "@/actions/purchases";
 import { GameDetail } from "@/components/games/game-detail";
 import { GameActions } from "@/components/games/game-actions";
+import { ActivationKey } from "@/components/games/activation-key";
+import { CommentsSection } from "@/components/games/comments-section";
 import { PageTransition } from "@/components/layout/page-transition";
 import { getSteamHeaderImage } from "@/lib/steam";
 
@@ -49,6 +51,8 @@ export default async function GamePage({ params }: Props) {
     isOwned(gameId),
   ]);
 
+  const activationKey = owned ? await getActivationKey(gameId) : null;
+
   return (
     <PageTransition className="container max-w-4xl py-8">
       <GameDetail
@@ -59,6 +63,8 @@ export default async function GamePage({ params }: Props) {
         aboutTheGame={game.aboutTheGame}
         supportedLanguages={game.supportedLanguages}
         isFree={game.isFree}
+        comingSoon={game.comingSoon}
+        isOwned={owned}
         price={game.price}
         genres={game.genres}
         developers={game.developers}
@@ -76,12 +82,26 @@ export default async function GamePage({ params }: Props) {
       >
         <GameActions
           gameId={gameId}
+          appid={game.appid}
+          name={game.name}
+          headerImage={game.headerImage}
           initialIsFavorite={fav}
           initialIsWishlisted={wish}
           initialIsOwned={owned}
           price={game.price?.final ?? 0}
+          currency={game.price?.currency}
+          isFree={game.isFree}
+          comingSoon={game.comingSoon}
         />
       </GameDetail>
+      {activationKey && (
+        <div className="mt-6">
+          <ActivationKey activationKey={activationKey} />
+        </div>
+      )}
+      <div className="mt-6">
+        <CommentsSection gameId={gameId} />
+      </div>
     </PageTransition>
   );
 }

@@ -13,6 +13,7 @@ import {
   HelpCircle,
   Search,
   Menu,
+  Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +25,7 @@ import {
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { UserMenu } from "@/components/auth/user-menu";
+import { MoodSurveyTrigger } from "@/components/mood-survey/mood-survey-trigger";
 import { cn } from "@/lib/utils";
 
 export function Header() {
@@ -35,6 +37,7 @@ export function Header() {
   const navItems = [
     { href: `/${locale}`, label: t("home"), icon: Gamepad2, exact: true },
     { href: `/${locale}/search`, label: t("search"), icon: Search },
+    { href: `/${locale}/tournaments`, label: t("tournaments"), icon: Trophy },
     { href: `/${locale}/library`, label: t("library"), icon: Library },
     { href: `/${locale}/favorites`, label: t("favorites"), icon: Heart },
     { href: `/${locale}/wishlist`, label: t("wishlist"), icon: Star },
@@ -42,7 +45,7 @@ export function Header() {
   ];
 
   const isActive = (href: string, exact?: boolean) =>
-    exact ? pathname === href : pathname.startsWith(href);
+    exact ? pathname === href : !!pathname?.startsWith(href);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -84,6 +87,7 @@ export function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-1">
+          <MoodSurveyTrigger />
           <LocaleSwitcher />
           <ThemeToggle />
           <UserMenu />

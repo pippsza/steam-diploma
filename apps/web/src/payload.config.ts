@@ -8,9 +8,13 @@ import sharp from 'sharp'
 
 import { authConfig } from './auth.config'
 import { ChatSessions } from './collections/ChatSessions'
+import { Comments } from './collections/Comments'
 import { Favorites } from './collections/Favorites'
 import { Games } from './collections/Games'
 import { Media } from './collections/Media'
+import { MoodSurveys } from './collections/MoodSurveys'
+import { Tournaments } from './collections/Tournaments'
+import { TournamentParticipants } from './collections/TournamentParticipants'
 import { Purchases } from './collections/Purchases'
 import { SupportTickets } from './collections/SupportTickets'
 import { Users } from './collections/Users'
@@ -32,7 +36,7 @@ export default buildConfig({
     defaultLocale: 'en',
     fallback: true,
   },
-  collections: [Users, Games, Favorites, Wishlist, Purchases, ChatSessions, SupportTickets, Media],
+  collections: [Users, Games, Favorites, Wishlist, Purchases, Comments, ChatSessions, MoodSurveys, Tournaments, TournamentParticipants, SupportTickets, Media],
   globals: [TelegramAdmins],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

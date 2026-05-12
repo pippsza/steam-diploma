@@ -3,6 +3,7 @@ import { Star, Search } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import { auth } from '@/auth'
 import { getWishlist } from '@/actions/wishlist'
+import { getOwnedGameIds } from '@/actions/purchases'
 import { GameGrid } from '@/components/games/game-grid'
 import { AuthRequired } from '@/components/auth/auth-required'
 import { PageTransition } from '@/components/layout/page-transition'
@@ -24,6 +25,7 @@ export default async function WishlistPage({ params }: { params: Promise<{ local
   }
 
   let games: Array<{
+    id?: string | number
     appid: number
     name: string
     headerImage?: string | null
@@ -40,6 +42,8 @@ export default async function WishlistPage({ params }: { params: Promise<{ local
   } catch {
     // Error fetching wishlist
   }
+
+  const ownedIds = await getOwnedGameIds()
 
   return (
     <PageTransition className="container py-8">
@@ -60,7 +64,7 @@ export default async function WishlistPage({ params }: { params: Promise<{ local
           </Link>
         </div>
       ) : (
-        <GameGrid games={games} />
+        <GameGrid games={games} ownedIds={ownedIds} />
       )}
     </PageTransition>
   )

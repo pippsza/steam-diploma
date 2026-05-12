@@ -23,7 +23,7 @@ export function SearchPagination({ currentPage, totalPages }: SearchPaginationPr
   if (totalPages <= 1) return null
 
   const goToPage = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParams?.toString() ?? '')
     if (page <= 1) {
       params.delete('page')
     } else {

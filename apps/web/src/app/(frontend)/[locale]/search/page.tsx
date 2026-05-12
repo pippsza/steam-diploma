@@ -1,4 +1,5 @@
 import { searchGames } from '@/actions/games'
+import { getOwnedGameIds } from '@/actions/purchases'
 import { GameGrid } from '@/components/games/game-grid'
 import { PageTransition } from '@/components/layout/page-transition'
 import { SearchFilters } from '@/components/search/search-filters'
@@ -26,15 +27,18 @@ export default async function SearchPage({ params, searchParams }: Props) {
   const hasRequirements = sp.reqs === 'true' ? true : undefined
   const page = parseInt(sp.page ?? '1', 10)
 
-  const result = await searchGames(query, {
-    genre,
-    isFree,
-    platform,
-    hasRequirements,
-    page,
-    limit: 20,
-    locale,
-  })
+  const [result, ownedIds] = await Promise.all([
+    searchGames(query, {
+      genre,
+      isFree,
+      platform,
+      hasRequirements,
+      page,
+      limit: 20,
+      locale,
+    }),
+    getOwnedGameIds(),
+  ])
 
   return (
     <PageTransition className="container py-8">
@@ -54,7 +58,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
             {result.totalDocs} games found
             {query && <> for &quot;{query}&quot;</>}
           </p>
-          <GameGrid games={result.games as any} />
+          <GameGrid games={result.games as any} ownedIds={ownedIds} />
           <SearchPagination
             currentPage={result.page ?? page}
             totalPages={result.totalPages}

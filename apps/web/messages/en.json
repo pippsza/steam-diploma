@@ -5,6 +5,7 @@
     "library": "Library",
     "favorites": "Favorites",
     "wishlist": "Wishlist",
+    "tournaments": "Tournaments",
     "recommendations": "Recommendations",
     "search": "Search",
     "support": "Support",
@@ -24,6 +25,10 @@
   "games": {
     "free": "Free",
     "buy": "Buy",
+    "buyFor": "Buy {price}",
+    "getFree": "Get Free",
+    "comingSoon": "Coming Soon",
+    "unavailable": "Unavailable",
     "addToFavorites": "Add to Favorites",
     "removeFromFavorites": "Remove from Favorites",
     "addToWishlist": "Add to Wishlist",
@@ -45,7 +50,47 @@
     "emptyWishlist": "Your wishlist is empty",
     "emptyWishlistHint": "Add games you want to buy later",
     "browseGames": "Browse games",
-    "showMore": "Show more"
+    "showMore": "Show more",
+    "activationKey": {
+      "title": "Your activation key",
+      "description": "Use this key to activate the game. Click to reveal, then copy.",
+      "copy": "Copy",
+      "copied": "Copied"
+    },
+    "purchase": {
+      "confirmTitle": "Confirm purchase",
+      "confirmDescription": "You're about to add this game to your library.",
+      "confirmFreeTitle": "Add to library",
+      "confirmFreeDescription": "This game is free. Add it to your library?",
+      "confirmButton": "Pay {price}",
+      "getFree": "Get Free",
+      "cancel": "Cancel",
+      "processing": "Processing...",
+      "free": "Free",
+      "successTitle": "Purchase successful!",
+      "successDescription": "{name} is now in your library.",
+      "keyTitle": "Your activation key",
+      "keyHint": "Save this key — you can also find it later on the game page.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "done": "Done",
+      "errorTitle": "Purchase failed",
+      "errorGeneric": "Could not complete the purchase. Try again.",
+      "close": "Close"
+    },
+    "comments": {
+      "title": "Comments",
+      "count": "{count, plural, =0 {No comments} =1 {1 comment} other {# comments}}",
+      "placeholder": "Share your thoughts about this game...",
+      "post": "Post",
+      "posting": "Posting...",
+      "empty": "Be the first to leave a comment.",
+      "signInToComment": "Sign in to leave a comment.",
+      "signIn": "Sign in",
+      "anonymous": "Anonymous",
+      "delete": "Delete comment",
+      "errorGeneric": "Could not post your comment. Try again."
+    }
   },
   "chat": {
     "placeholder": "Ask about games...",
@@ -110,6 +155,116 @@
     "linkExpired": "Code expired. Try again.",
     "linkSuccess": "Telegram linked successfully!",
     "signInRequired": "Sign in to access settings"
+  },
+  "survey": {
+    "badge": "Mood quiz",
+    "triggerAria": "Take the mood quiz",
+    "triggerTooltip": "Pick games by mood",
+    "signInRequiredTitle": "Sign in to take the quiz",
+    "signInRequiredDescription": "We save your answers so the AI can learn your taste over time.",
+    "signIn": "Sign in",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "finish": "Show games",
+    "resultMessage": "Picks based on your current mood and previous answers.",
+    "steps": {
+      "mood": {
+        "title": "How are you feeling right now?",
+        "description": "Pick the one that best matches your current mood."
+      },
+      "vibe": {
+        "title": "Relaxing or active?",
+        "description": "Cozy time or something that gets your blood pumping?"
+      },
+      "social": {
+        "title": "Solo or with friends?",
+        "description": "Single-player session, or multiplayer with others?"
+      },
+      "genre": {
+        "title": "Any genre catching your eye?",
+        "description": "Optional — skip if you don't care."
+      },
+      "sessionLength": {
+        "title": "How much time do you have?",
+        "description": "Helps us pick the right scope."
+      },
+      "novelty": {
+        "title": "Something new or familiar?",
+        "description": "Try a fresh release, or stick with a proven hit?"
+      }
+    },
+    "moods": {
+      "chill": "Chill",
+      "intense": "Intense",
+      "competitive": "Competitive",
+      "adventurous": "Adventurous",
+      "thoughtful": "Thoughtful",
+      "creative": "Creative",
+      "social": "Social",
+      "nostalgic": "Nostalgic",
+      "scary": "Scary",
+      "sad": "Melancholic",
+      "happy": "Happy",
+      "bored": "Bored"
+    },
+    "vibe": {
+      "relaxing": "Relaxing",
+      "active": "Active"
+    },
+    "social": {
+      "solo": "Solo",
+      "multiplayer": "With friends"
+    },
+    "sessionLength": {
+      "short": "Short",
+      "medium": "Medium",
+      "long": "Long"
+    },
+    "sessionLengthHint": {
+      "short": "< 30 min",
+      "medium": "1–2 h",
+      "long": "Many hours"
+    },
+    "novelty": {
+      "new": "Something new",
+      "familiar": "Something familiar"
+    }
+  },
+  "tournaments": {
+    "title": "Tournaments",
+    "subtitle": "Watch live events, join upcoming brackets, see who took home the trophy.",
+    "empty": "No tournaments here yet.",
+    "filter": {
+      "all": "All",
+      "live": "Live",
+      "upcoming": "Upcoming",
+      "ended": "Ended"
+    },
+    "section": {
+      "live": "Live now",
+      "upcoming": "Upcoming",
+      "ended": "Recently ended"
+    },
+    "status": {
+      "live": "LIVE",
+      "upcoming": "Upcoming",
+      "ended": "Ended"
+    },
+    "participants": "Participants",
+    "noParticipants": "No participants yet — be the first!",
+    "starts": "Starts",
+    "ends": "Ends",
+    "prizePool": "Prize pool",
+    "location": "Location",
+    "organizer": "Organizer",
+    "format": "Format",
+    "join": "Join tournament",
+    "leave": "Leave tournament",
+    "full": "Tournament is full",
+    "alreadyEnded": "Already ended",
+    "signInToJoin": "Sign in to join"
   },
   "recommendations": {
     "title": "Recommendations",

@@ -3,6 +3,7 @@ import { getPayload } from "payload";
 import config from "@payload-config";
 import { GameGrid } from "@/components/games/game-grid";
 import { PageTransition } from "@/components/layout/page-transition";
+import { getOwnedGameIds } from "@/actions/purchases";
 
 export const dynamic = "force-dynamic";
 
@@ -34,18 +35,20 @@ export default async function RecommendationsPage({ params }: Props) {
     limit: 8,
   });
 
+  const ownedIds = await getOwnedGameIds();
+
   return (
     <PageTransition className="container space-y-12 py-8">
       <h1 className="text-2xl font-bold">{t("title")}</h1>
 
       <section>
         <h2 className="mb-4 text-xl font-semibold">{t("popular")}</h2>
-        <GameGrid games={popular.docs as any} />
+        <GameGrid games={popular.docs as any} ownedIds={ownedIds} />
       </section>
 
       <section>
         <h2 className="mb-4 text-xl font-semibold">{t("topRated")}</h2>
-        <GameGrid games={topRated.docs as any} />
+        <GameGrid games={topRated.docs as any} ownedIds={ownedIds} />
       </section>
     </PageTransition>
   );

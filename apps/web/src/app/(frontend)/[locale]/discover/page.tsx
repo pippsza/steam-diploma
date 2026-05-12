@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Bot, ArrowLeft, MessageCircle } from 'lucide-react'
@@ -8,6 +8,7 @@ import { motion } from 'motion/react'
 import { useChatContext } from '@/components/ai/chat-provider'
 import { GameGrid } from '@/components/games/game-grid'
 import { Button } from '@/components/ui/button'
+import { getOwnedGameIds } from '@/actions/purchases'
 
 const stagger = {
   hidden: {},
@@ -25,6 +26,7 @@ export default function DiscoverPage() {
   const { toolAction, open } = useChatContext()
   const t = useTranslations('discover')
   const router = useRouter()
+  const [ownedIds, setOwnedIds] = useState<string[]>([])
 
   // Redirect home if no search results
   useEffect(() => {
@@ -32,6 +34,10 @@ export default function DiscoverPage() {
       router.replace('/')
     }
   }, [toolAction, router])
+
+  useEffect(() => {
+    getOwnedGameIds().then(setOwnedIds)
+  }, [])
 
   if (!toolAction || toolAction.type !== 'search_games') return null
 
@@ -74,7 +80,7 @@ export default function DiscoverPage() {
       {/* Game grid */}
       <motion.div variants={fadeUp}>
         {mappedGames.length > 0 ? (
-          <GameGrid games={mappedGames} />
+          <GameGrid games={mappedGames} ownedIds={ownedIds} />
         ) : (
           <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
             <p className="text-muted-foreground">{t('noResults')}</p>

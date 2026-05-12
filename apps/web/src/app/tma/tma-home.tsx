@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getSteamHeaderImage } from "@/lib/steam";
+import { formatPrice } from "@/lib/game-status";
 import { hapticFeedback } from "@/lib/tma";
 
 interface Game {
@@ -78,7 +79,7 @@ export function TMAHome({ games }: { games: Game[] }) {
                       </span>
                     ) : game.price?.final ? (
                       <span className="text-xs font-bold">
-                        ${(game.price.final / 100).toFixed(2)}
+                        {formatPrice(game.price.final, game.price.currency)}
                       </span>
                     ) : null}
                   </div>

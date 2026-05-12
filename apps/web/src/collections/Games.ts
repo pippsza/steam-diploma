@@ -121,6 +121,11 @@ export const Games: CollectionConfig = {
       type: 'text',
     },
     {
+      name: 'comingSoon',
+      type: 'checkbox',
+      defaultValue: false,
+    },
+    {
       name: 'isFree',
       type: 'checkbox',
       defaultValue: false,

@@ -19,7 +19,27 @@ import {
   navigateToolSchema,
   openGameToolSchema,
   getUserLibraryToolSchema,
+  pickByMoodToolSchema,
 } from "@steam-diploma/ai";
+
+// Maps a mood to a set of genres (matched with OR) or a name keyword fallback.
+const MOOD_PROFILE: Record<
+  string,
+  { genres?: string[]; nameKeywords?: string[]; isFree?: boolean }
+> = {
+  chill: { genres: ["Casual", "Simulation"] },
+  intense: { genres: ["Action", "Racing"] },
+  competitive: { genres: ["Sports", "Action", "Massively Multiplayer"] },
+  adventurous: { genres: ["Adventure", "RPG"] },
+  thoughtful: { genres: ["Strategy"] },
+  creative: { genres: ["Simulation", "Indie"] },
+  social: { genres: ["Massively Multiplayer", "Free To Play"] },
+  nostalgic: { genres: ["Indie"] },
+  scary: { nameKeywords: ["horror", "zombie", "dark", "survival", "dead"] },
+  sad: { genres: ["Adventure", "Indie"] },
+  happy: { genres: ["Casual", "Indie"] },
+  bored: { genres: ["Action", "Adventure", "Casual"] },
+};
 
 export const maxDuration = 30;
 
@@ -101,7 +121,7 @@ export async function POST(req: Request) {
   const systemPrompt = await getSystemPrompt();
 
   // User context
-  const [favorites, library] = await Promise.all([
+  const [favorites, library, recentSurveys] = await Promise.all([
     payload
       .find({
         collection: "favorites",
@@ -126,12 +146,41 @@ export async function POST(req: Request) {
           .map((d) => (typeof d.game === "object" && d.game ? d.game.name : ""))
           .filter(Boolean),
       ),
+    payload
+      .find({
+        collection: "mood-surveys",
+        where: { user: { equals: session.user.id } },
+        sort: "-createdAt",
+        limit: 3,
+      })
+      .then((r) =>
+        r.docs.map((d) =>
+          [
+            `mood=${d.mood}`,
+            `vibe=${d.vibe}`,
+            `social=${d.social}`,
+            d.genre ? `genre=${d.genre}` : null,
+            `sessionLength=${d.sessionLength}`,
+            `novelty=${d.novelty}`,
+          ]
+            .filter(Boolean)
+            .join(", "),
+        ),
+      ),
   ]);
+
+  const surveyContext =
+    recentSurveys.length > 0
+      ? `Recent mood surveys (latest first):\n${recentSurveys
+          .map((s, i) => `${i + 1}. ${s}`)
+          .join("\n")}`
+      : "Recent mood surveys: none yet";
 
   const systemMessage = `${systemPrompt}
 
 User's favorite games: ${favorites.length > 0 ? favorites.join(", ") : "none yet"}
-User's library (purchased): ${library.length > 0 ? library.join(", ") : "none yet"}`;
+User's library (purchased): ${library.length > 0 ? library.join(", ") : "none yet"}
+${surveyContext}`;
 
   // Pick model: OpenRouter (paid) → Gemini (free fallback)
   const model = getOpenRouterModel() ?? getGeminiModel();
@@ -239,6 +288,67 @@ User's library (purchased): ${library.length > 0 ? library.join(", ") : "none ye
           }
           console.log("[AI tool] open_game resolved appid:", appid);
           return { action: "open_game", appid, gameName: params.game_name };
+        },
+      }),
+
+      pick_by_mood: tool({
+        ...pickByMoodToolSchema,
+        execute: async (params) => {
+          console.log("[AI tool] pick_by_mood:", JSON.stringify(params));
+          const profile = MOOD_PROFILE[params.mood] ?? {};
+          const limit = params.limit ?? 8;
+
+          const where: Record<string, any> = {
+            detailsFetched: { equals: true },
+          };
+          if (profile.isFree !== undefined) {
+            where.isFree = { equals: profile.isFree };
+          }
+          if (profile.genres?.length) {
+            where.or = profile.genres.map((g) => ({
+              "genres.description": { contains: g },
+            }));
+          }
+
+          let docs = (
+            await payload.find({
+              collection: "games",
+              where,
+              locale: "en",
+              limit,
+              sort: "-recommendations.total",
+            })
+          ).docs;
+
+          // Fallback to keyword search when the mood has no genre profile or returned nothing.
+          if (docs.length === 0 && profile.nameKeywords?.length) {
+            const keyword =
+              profile.nameKeywords[
+                Math.floor(Math.random() * profile.nameKeywords.length)
+              ];
+            docs = (
+              await payload.find({
+                collection: "games",
+                where: {
+                  detailsFetched: { equals: true },
+                  name: { contains: keyword },
+                },
+                locale: "en",
+                limit,
+                sort: "-recommendations.total",
+              })
+            ).docs;
+          }
+
+          console.log("[AI tool] pick_by_mood found:", docs.length);
+          return docs.map((g) => ({
+            appid: g.appid,
+            name: g.name,
+            headerImage: g.headerImage,
+            isFree: g.isFree,
+            price: g.price,
+            genres: g.genres?.map((gen: any) => gen.description),
+          }));
         },
       }),
 

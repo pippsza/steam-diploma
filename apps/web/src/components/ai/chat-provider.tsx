@@ -50,6 +50,7 @@ interface ChatContextValue {
   sessionsLoading: boolean
   // Tool actions
   toolAction: ToolAction
+  setToolAction: (action: ToolAction) => void
   clearToolAction: () => void
 }
 
@@ -163,6 +164,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const toolName = part.toolName ?? part.type?.replace('tool-', '')
 
     switch (toolName) {
+      case 'pick_by_mood':
       case 'search_games': {
         const games = part.output as SearchGamesResult[]
         // Don't navigate if no results — let the user stay in chat and refine their query
@@ -305,6 +307,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         removeSession,
         sessionsLoading,
         toolAction,
+        setToolAction,
         clearToolAction,
       }}
     >

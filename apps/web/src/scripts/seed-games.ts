@@ -82,6 +82,7 @@ function mapDetailsToPayload(details: SteamAppDetails) {
     categories: details.categories?.map((c) => ({ categoryId: String(c.id), description: c.description })) ?? [],
     screenshots: details.screenshots?.map((s) => ({ url: s.path_full, thumbnailUrl: s.path_thumbnail })) ?? [],
     releaseDate: details.release_date?.date ?? '',
+    comingSoon: details.release_date?.coming_soon ?? false,
     price: details.price_overview
       ? {
           currency: details.price_overview.currency,

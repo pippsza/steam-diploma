@@ -60,7 +60,7 @@ export default async function LibraryPage({ params }: { params: Promise<{ locale
           </Link>
         </div>
       ) : (
-        <GameGrid games={games} />
+        <GameGrid games={games} markAllOwned />
       )}
     </PageTransition>
   )
